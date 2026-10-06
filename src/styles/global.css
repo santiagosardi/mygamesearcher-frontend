@@ -1,0 +1,64 @@
+body { margin: 0; min-width: 320px; }
+.app-shell { display: flex; flex-direction: column; min-height: 100svh; }
+.app-navbar {
+  background: var(--app-navbar);
+  border-bottom: 1px solid var(--app-border);
+  padding-block: 1rem;
+}
+.app-navbar .navbar-brand {
+  display: flex; align-items: center; gap: .65rem;
+  color: var(--app-text); font-size: 1.05rem; font-weight: 700;
+}
+.brand-mark {
+  display: grid; place-items: center; width: 2rem; height: 2rem;
+  border: 1px solid var(--app-accent); border-radius: .35rem;
+  background: var(--app-background);
+}
+.app-navbar .nav-link {
+  color: var(--app-text-secondary); border-radius: .25rem; padding: .65rem .8rem;
+}
+.app-navbar .nav-link:hover, .app-navbar .nav-link.active {
+  color: var(--app-text); background: var(--app-surface);
+}
+.app-navbar .nav-link.active { box-shadow: inset 0 -2px var(--app-accent); }
+.eyebrow {
+  color: var(--app-text-secondary); text-transform: uppercase;
+  letter-spacing: .12em; font-size: .75rem; font-weight: 600; margin-bottom: .75rem;
+}
+.page-header h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700;
+  letter-spacing: -.025em; margin-bottom: 1rem;
+}
+.page-description, .secondary-text { color: var(--app-text-secondary); line-height: 1.7; }
+.page-description { max-width: 44rem; }
+.home-hero, .placeholder-panel, .section-card {
+  background: var(--app-surface); border: 1px solid var(--app-border); border-radius: .5rem;
+}
+.home-hero { border-top: 3px solid var(--app-accent); }
+.section-card {
+  display: block; text-decoration: none; color: var(--app-text);
+  transition: border-color .15s ease;
+}
+.section-card:hover { border-color: var(--app-accent); }
+.section-card h3 { display: flex; justify-content: space-between; gap: 1rem; }
+.status-label {
+  display: inline-block; border: 1px solid var(--app-border); border-radius: .25rem;
+  padding: .25rem .6rem; color: var(--app-text-secondary); font-size: .8rem;
+}
+.app-footer {
+  background: var(--app-navbar); border-top: 1px solid var(--app-border);
+  color: var(--app-text-secondary); font-size: .85rem;
+}
+a:focus-visible, button:focus-visible { outline: 2px solid var(--app-text); outline-offset: 4px; }
+.skip-link {
+  position: fixed; top: .5rem; left: .5rem; z-index: 1050;
+  padding: .75rem 1rem; background: var(--app-navbar); color: var(--app-text);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: translateY(0); }
+@media (max-width: 991.98px) {
+  .app-navbar .navbar-collapse { padding-top: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-card { transition: none; }
+}
