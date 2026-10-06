@@ -4,14 +4,12 @@ import { isAxiosError } from 'axios'
 import PageHeader from '../../components/PageHeader'
 import { crearColeccion, obtenerColecciones } from '../../services/colecciones.service'
 import type { Coleccion } from '../../types/coleccion'
+import type { Juego } from '../../types/juego'
+import { obtenerJuegos } from '../../services/juegos.service'
+import CollectionCard from './CollectionCard'
 
 // Usuario temporal hasta contar con autenticación.
 const USUARIO_PRUEBA_ID = 2
-
-function formatearFecha(valor: string): string {
-  const fecha = new Date(valor)
-  return Number.isNaN(fecha.getTime()) ? 'Fecha no disponible' : fecha.toLocaleDateString('es-AR')
-}
 
 function CollectionsPage() {
   const [colecciones, setColecciones] = useState<Coleccion[]>([])
@@ -24,10 +22,33 @@ function CollectionsPage() {
   const [confirmacion, setConfirmacion] = useState('')
   const envioEnCurso = useRef(false)
   const montado = useRef(false)
+  const [juegos, setJuegos] = useState<Juego[]>([])
+  const [cargandoJuegos, setCargandoJuegos] = useState(true)
+  const [errorJuegos, setErrorJuegos] = useState<string | null>(null)
+
+  function actualizarLocal(actualizada: Coleccion) {
+    setColecciones((actuales) => actuales.map((coleccion) => coleccion.id === actualizada.id ? actualizada : coleccion))
+  }
+
+  function eliminarLocal(eliminada: Coleccion) {
+    setColecciones((actuales) => actuales.filter((coleccion) => coleccion.id !== eliminada.id))
+    setConfirmacion(`Se eliminó la colección "${eliminada.nombre}". Los juegos del catálogo se conservaron.`)
+  }
 
   useEffect(() => {
     let activo = true
     montado.current = true
+
+    async function cargarJuegos() {
+      try {
+        const datos = await obtenerJuegos()
+        if (activo) setJuegos(datos)
+      } catch {
+        if (activo) setErrorJuegos('No pudimos cargar el catálogo. Volvé a abrir esta página para intentar nuevamente.')
+      } finally {
+        if (activo) setCargandoJuegos(false)
+      }
+    }
 
     async function cargarColecciones() {
       try {
@@ -41,6 +62,7 @@ function CollectionsPage() {
     }
 
     void cargarColecciones()
+    void cargarJuegos()
     return () => {
       activo = false
       montado.current = false
@@ -126,16 +148,8 @@ function CollectionsPage() {
         <div className="row g-3">
           {colecciones.map((coleccion) => (
             <div className="col-12 col-md-6 col-xl-4" key={coleccion.id}>
-              <article className="placeholder-panel h-100 p-4 text-break">
-                <h2 className="h4">{coleccion.nombre}</h2>
-                {coleccion.descripcion && <p className="secondary-text">{coleccion.descripcion}</p>}
-                <dl className="mb-0">
-                  <dt>Fecha de creación</dt>
-                  <dd className="secondary-text">{formatearFecha(coleccion.fechaCreacion)}</dd>
-                  <dt>Cantidad de juegos</dt>
-                  <dd className="secondary-text mb-0">{coleccion.juegos.length}</dd>
-                </dl>
-              </article>
+              <CollectionCard coleccion={coleccion} juegos={juegos} cargandoJuegos={cargandoJuegos}
+                errorJuegos={errorJuegos} onActualizar={actualizarLocal} onEliminar={eliminarLocal} />
             </div>
           ))}
         </div>

@@ -16,3 +16,9 @@ export interface CrearColeccion {
   nombre: string
   descripcion?: string
 }
+
+export interface ActualizarColeccion {
+  nombre?: string
+  descripcion?: string
+  juegoIds?: number[]
+}
