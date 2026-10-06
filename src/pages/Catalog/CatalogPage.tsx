@@ -7,6 +7,12 @@ function CatalogPage() {
   const [juegos, setJuegos] = useState<Juego[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [busqueda, setBusqueda] = useState('')
+
+  const textoBuscado = busqueda.trim().toLowerCase()
+  const juegosFiltrados = juegos.filter((juego) =>
+    juego.titulo.toLowerCase().includes(textoBuscado),
+  )
 
   useEffect(() => {
     let activo = true
@@ -35,6 +41,19 @@ function CatalogPage() {
   return (
     <>
       <PageHeader title="Catálogo" description="Explorá videojuegos para descubrir cuáles querés sumar a tu biblioteca." />
+      <div className="row mb-4">
+        <div className="col-12 col-md-8 col-lg-6">
+          <label className="form-label" htmlFor="busqueda-catalogo">Buscar por título</label>
+          <input
+            className="form-control catalog-search"
+            id="busqueda-catalogo"
+            type="search"
+            placeholder="Escribí el título de un juego"
+            value={busqueda}
+            onChange={(event) => setBusqueda(event.target.value)}
+          />
+        </div>
+      </div>
       {cargando ? (
         <p className="placeholder-panel p-4 secondary-text" role="status">Cargando juegos…</p>
       ) : error ? (
@@ -44,9 +63,13 @@ function CatalogPage() {
           <h2 className="h4">Todavía no hay juegos en el catálogo</h2>
           <p className="secondary-text mb-0">Los juegos aparecerán acá cuando estén disponibles.</p>
         </section>
+      ) : juegosFiltrados.length === 0 ? (
+        <p className="placeholder-panel p-4 secondary-text" role="status">
+          No se encontraron juegos con esa búsqueda
+        </p>
       ) : (
         <div className="row g-3">
-          {juegos.map((juego) => (
+          {juegosFiltrados.map((juego) => (
             <div className="col-12 col-md-6 col-xl-4" key={juego.id}>
               <article className="placeholder-panel h-100 p-4 text-break">
                 <h2 className="h4">{juego.titulo}</h2>
