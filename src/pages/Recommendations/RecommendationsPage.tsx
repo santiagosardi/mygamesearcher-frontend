@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import { obtenerRecomendaciones } from '../../services/recomendaciones.service'
+import { agregarJuegoABiblioteca } from '../../services/bibliotecas.service'
 import type { RespuestaRecomendaciones } from '../../types/recomendacion'
 
 // Usuario temporal hasta contar con autenticación.
@@ -12,9 +13,74 @@ function RecommendationsPage() {
   const [respuesta, setRespuesta] = useState<RespuestaRecomendaciones | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [agregando, setAgregando] = useState<number[]>([])
+  const [guardados, setGuardados] = useState<number[]>([])
+  const [mensajes, setMensajes] = useState<Record<number, { texto: string; error: boolean }>>({})
+  const [actualizando, setActualizando] = useState(false)
+  const [errorActualizacion, setErrorActualizacion] = useState<string | null>(null)
+  const enCurso = useRef(new Set<number>())
+  const agregados = useRef(new Set<number>())
+  const montado = useRef(false)
+  const versionConsulta = useRef(0)
+
+  async function actualizarRanking() {
+    const version = ++versionConsulta.current
+    setActualizando(true)
+    setErrorActualizacion(null)
+    try {
+      const datos = await obtenerRecomendaciones(USUARIO_PRUEBA_ID)
+      // Solo la consulta más reciente puede reemplazar el ranking.
+      if (montado.current && version === versionConsulta.current) setRespuesta(datos)
+    } catch {
+      if (montado.current && version === versionConsulta.current) {
+        setErrorActualizacion('El juego está en tu biblioteca, pero no pudimos actualizar el ranking. Las recomendaciones visibles corresponden a la consulta anterior.')
+      }
+    } finally {
+      if (montado.current && version === versionConsulta.current) setActualizando(false)
+    }
+  }
+
+  async function agregarJuego(juegoId: number, titulo: string) {
+    if (enCurso.current.has(juegoId) || agregados.current.has(juegoId)) return
+    enCurso.current.add(juegoId)
+    setAgregando((actuales) => [...actuales, juegoId])
+    setMensajes((actuales) => {
+      const siguientes = { ...actuales }
+      delete siguientes[juegoId]
+      return siguientes
+    })
+
+    try {
+      let yaExistia = false
+      try {
+        await agregarJuegoABiblioteca({ usuarioId: USUARIO_PRUEBA_ID, juegoId })
+      } catch (error) {
+        if (isAxiosError(error) && error.response?.status === 409) yaExistia = true
+        else throw error
+      }
+      if (!montado.current) return
+      agregados.current.add(juegoId)
+      setGuardados((actuales) => [...actuales, juegoId])
+      setMensajes((actuales) => ({ ...actuales, [juegoId]: {
+        texto: yaExistia ? `"${titulo}" ya estaba en tu biblioteca.` : `Se agregó "${titulo}" a tu biblioteca.`,
+        error: false,
+      } }))
+      await actualizarRanking()
+    } catch (error) {
+      if (!montado.current) return
+      const texto = isAxiosError(error) && !error.response
+        ? `No pudimos conectar con el backend para agregar "${titulo}". Intentá nuevamente.`
+        : `No pudimos agregar "${titulo}" a tu biblioteca. Intentá nuevamente.`
+      setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto, error: true } }))
+    } finally {
+      enCurso.current.delete(juegoId)
+      if (montado.current) setAgregando((actuales) => actuales.filter((id) => id !== juegoId))
+    }
+  }
 
   useEffect(() => {
     let activo = true
+    montado.current = true
 
     async function cargarRecomendaciones() {
       try {
@@ -31,12 +97,26 @@ function RecommendationsPage() {
     }
 
     void cargarRecomendaciones()
-    return () => { activo = false }
+    return () => {
+      activo = false
+      montado.current = false
+    }
   }, [])
 
   return (
     <>
       <PageHeader title="Recomendaciones" description="Descubrí nuevas opciones para tu próxima sesión de juego." />
+      {Object.entries(mensajes).map(([id, mensaje]) => (
+        <p className="placeholder-panel p-3" key={id} role={mensaje.error ? 'alert' : 'status'}>{mensaje.texto}</p>
+      ))}
+      {actualizando && <p className="secondary-text small" role="status">Actualizando recomendaciones…</p>}
+      {errorActualizacion && (
+        <div className="placeholder-panel p-3 mb-3">
+          <p role="alert">{errorActualizacion}</p>
+          <button className="btn btn-outline-secondary btn-sm" type="button" disabled={actualizando}
+            onClick={() => void actualizarRanking()}>Reintentar actualización</button>
+        </div>
+      )}
       {cargando ? (
         <p className="placeholder-panel p-4 secondary-text" role="status">Cargando recomendaciones…</p>
       ) : error ? (
@@ -68,6 +148,12 @@ function RecommendationsPage() {
                   <ul className="secondary-text small ps-3 mb-0">
                     {motivos.map((motivo) => <li key={motivo}>{motivo}</li>)}
                   </ul>
+                  <button className="btn btn-primary w-100 mt-4" type="button"
+                    disabled={agregando.includes(juego.id) || guardados.includes(juego.id)}
+                    onClick={() => void agregarJuego(juego.id, juego.titulo)}>
+                    {guardados.includes(juego.id) ? 'Ya está en tu biblioteca'
+                      : agregando.includes(juego.id) ? 'Agregando...' : 'Agregar a mi biblioteca'}
+                  </button>
                 </article>
               </div>
             ))}
