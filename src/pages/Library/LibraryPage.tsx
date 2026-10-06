@@ -7,6 +7,13 @@ import type { ActualizarBiblioteca, Biblioteca, EstadoBiblioteca } from '../../t
 // Usuario de prueba hasta contar con autenticación.
 const USUARIO_PRUEBA_ID = 2
 
+const prioridadEstado: Record<EstadoBiblioteca, number> = {
+  PENDIENTE: 0,
+  JUGANDO: 1,
+  COMPLETADO: 2,
+  ABANDONADO: 3,
+}
+
 const etiquetasEstado: Record<EstadoBiblioteca, string> = {
   PENDIENTE: 'Pendiente',
   JUGANDO: 'Jugando',
@@ -30,6 +37,10 @@ function LibraryPage() {
   const [confirmacionEliminacion, setConfirmacionEliminacion] = useState('')
   const solicitudesEnCurso = useRef(new Set<number>())
   const montado = useRef(false)
+  const bibliotecaOrdenada = [...biblioteca].sort((a, b) =>
+    prioridadEstado[a.estado] - prioridadEstado[b.estado] ||
+    a.juego.titulo.localeCompare(b.juego.titulo, 'es', { sensitivity: 'base' }),
+  )
 
   // Sin datos se elimina; con datos se actualizan únicamente los campos enviados.
   async function administrarEntrada(entrada: Biblioteca, datos?: ActualizarBiblioteca) {
@@ -112,7 +123,7 @@ function LibraryPage() {
         </section>
       ) : (
         <div className="row g-3">
-          {biblioteca.map((entrada) => (
+          {bibliotecaOrdenada.map((entrada) => (
             <div className="col-12 col-md-6 col-xl-4" key={entrada.id}>
               <article className="placeholder-panel h-100 p-4 text-break">
                 <h2 className="h4">{entrada.juego.titulo}</h2>
