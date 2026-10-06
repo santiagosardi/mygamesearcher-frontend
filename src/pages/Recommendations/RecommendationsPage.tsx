@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import { obtenerRecomendaciones } from '../../services/recomendaciones.service'
 import { agregarJuegoABiblioteca } from '../../services/bibliotecas.service'
 import type { RespuestaRecomendaciones } from '../../types/recomendacion'
+import { obtenerColecciones } from '../../services/colecciones.service'
+import type { Coleccion } from '../../types/coleccion'
 
 // Usuario temporal hasta contar con autenticación.
 const USUARIO_PRUEBA_ID = 2
@@ -12,7 +14,12 @@ const USUARIO_PRUEBA_ID = 2
 function RecommendationsPage() {
   const [respuesta, setRespuesta] = useState<RespuestaRecomendaciones | null>(null)
   const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [colecciones, setColecciones] = useState<Coleccion[]>([])
+  const [cargandoColecciones, setCargandoColecciones] = useState(true)
+  const [errorColecciones, setErrorColecciones] = useState<string | null>(null)
+  const [fuente, setFuente] = useState('')
+  const [fuenteRespuesta, setFuenteRespuesta] = useState('')
+  const fuenteActual = useRef('')
   const [agregando, setAgregando] = useState<number[]>([])
   const [guardados, setGuardados] = useState<number[]>([])
   const [mensajes, setMensajes] = useState<Record<number, { texto: string; error: boolean }>>({})
@@ -23,21 +30,38 @@ function RecommendationsPage() {
   const montado = useRef(false)
   const versionConsulta = useRef(0)
 
-  async function actualizarRanking() {
+  const actualizarRanking = useCallback(async (despuesDeAgregar = false) => {
     const version = ++versionConsulta.current
+    const fuenteConsultada = fuenteActual.current
     setActualizando(true)
     setErrorActualizacion(null)
     try {
-      const datos = await obtenerRecomendaciones(USUARIO_PRUEBA_ID)
+      const datos = await obtenerRecomendaciones(USUARIO_PRUEBA_ID, fuenteConsultada ? Number(fuenteConsultada) : undefined)
       // Solo la consulta más reciente puede reemplazar el ranking.
-      if (montado.current && version === versionConsulta.current) setRespuesta(datos)
-    } catch {
       if (montado.current && version === versionConsulta.current) {
-        setErrorActualizacion('El juego está en tu biblioteca, pero no pudimos actualizar el ranking. Las recomendaciones visibles corresponden a la consulta anterior.')
+        setRespuesta(datos)
+        setFuenteRespuesta(fuenteConsultada)
+      }
+    } catch (error) {
+      if (montado.current && version === versionConsulta.current) {
+        setErrorActualizacion(despuesDeAgregar
+          ? 'El juego está en tu biblioteca, pero no pudimos actualizar el ranking. Si hay recomendaciones visibles, corresponden a la consulta anterior.'
+          : isAxiosError(error) && !error.response
+            ? 'No pudimos conectar con el backend. Intentá actualizar nuevamente.'
+            : 'No pudimos cargar las recomendaciones de la fuente seleccionada. Intentá nuevamente.')
       }
     } finally {
-      if (montado.current && version === versionConsulta.current) setActualizando(false)
+      if (montado.current && version === versionConsulta.current) {
+        setActualizando(false)
+        setCargando(false)
+      }
     }
+  }, [])
+
+  function cambiarFuente(valor: string) {
+    fuenteActual.current = valor
+    setFuente(valor)
+    void actualizarRanking()
   }
 
   async function agregarJuego(juegoId: number, titulo: string) {
@@ -65,7 +89,7 @@ function RecommendationsPage() {
         texto: yaExistia ? `"${titulo}" ya estaba en tu biblioteca.` : `Se agregó "${titulo}" a tu biblioteca.`,
         error: false,
       } }))
-      await actualizarRanking()
+      await actualizarRanking(true)
     } catch (error) {
       if (!montado.current) return
       const texto = isAxiosError(error) && !error.response
@@ -82,30 +106,47 @@ function RecommendationsPage() {
     let activo = true
     montado.current = true
 
-    async function cargarRecomendaciones() {
+    async function cargarColecciones() {
       try {
-        const datos = await obtenerRecomendaciones(USUARIO_PRUEBA_ID)
-        if (activo) setRespuesta(datos)
-      } catch (error) {
-        if (!activo) return
-        setError(isAxiosError(error) && !error.response
-          ? 'No pudimos conectar con el backend. Verificá la conexión y volvé a abrir esta página para intentar nuevamente.'
-          : 'No pudimos cargar las recomendaciones. Intentá volver a esta página más tarde.')
+        const datos = await obtenerColecciones(USUARIO_PRUEBA_ID)
+        if (activo) setColecciones(datos)
+      } catch {
+        if (activo) setErrorColecciones('No pudimos cargar tus colecciones. Podés seguir usando Toda mi biblioteca.')
       } finally {
-        if (activo) setCargando(false)
+        if (activo) setCargandoColecciones(false)
       }
     }
 
-    void cargarRecomendaciones()
+    void cargarColecciones()
+    void actualizarRanking()
     return () => {
       activo = false
       montado.current = false
+      versionConsulta.current += 1
     }
-  }, [])
+  }, [actualizarRanking])
 
   return (
     <>
       <PageHeader title="Recomendaciones" description="Descubrí nuevas opciones para tu próxima sesión de juego." />
+      <div className="row mb-4">
+        <div className="col-12 col-md-8 col-lg-6">
+          <label className="form-label" htmlFor="fuente-recomendaciones">Recomendar según</label>
+          <select className="form-select catalog-search" id="fuente-recomendaciones" data-bs-theme="dark"
+            value={fuente} onChange={(event) => cambiarFuente(event.target.value)} aria-describedby="descripcion-fuente">
+            <option value="">Toda mi biblioteca</option>
+            {colecciones.map((coleccion) => <option key={coleccion.id} value={coleccion.id}>{coleccion.nombre}</option>)}
+          </select>
+          <p className="secondary-text small mt-2 mb-0" id="descripcion-fuente">
+            {fuente ? 'Las recomendaciones se calculan según los juegos de esta colección.' : 'Las recomendaciones se calculan según toda tu biblioteca.'}
+          </p>
+          {cargandoColecciones && <p className="secondary-text small mt-2" role="status">Cargando colecciones…</p>}
+          {errorColecciones && <p className="secondary-text small mt-2" role="alert">{errorColecciones}</p>}
+        </div>
+      </div>
+      {respuesta && fuenteRespuesta !== fuente && (
+        <p className="secondary-text small" role="status">El ranking visible corresponde a la fuente anterior hasta que se complete la nueva consulta.</p>
+      )}
       {Object.entries(mensajes).map(([id, mensaje]) => (
         <p className="placeholder-panel p-3" key={id} role={mensaje.error ? 'alert' : 'status'}>{mensaje.texto}</p>
       ))}
@@ -119,8 +160,8 @@ function RecommendationsPage() {
       )}
       {cargando ? (
         <p className="placeholder-panel p-4 secondary-text" role="status">Cargando recomendaciones…</p>
-      ) : error ? (
-        <p className="placeholder-panel p-4" role="alert">{error}</p>
+      ) : !respuesta && errorActualizacion ? (
+        null
       ) : !respuesta || respuesta.recomendaciones.length === 0 ? (
         <section className="placeholder-panel p-4">
           <h2 className="h4">Todavía no hay recomendaciones disponibles</h2>
