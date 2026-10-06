@@ -1,11 +1,145 @@
+import { useEffect, useRef, useState } from 'react'
+import type { FormEvent } from 'react'
+import { isAxiosError } from 'axios'
 import PageHeader from '../../components/PageHeader'
-import PlaceholderPanel from '../../components/PlaceholderPanel'
+import { crearColeccion, obtenerColecciones } from '../../services/colecciones.service'
+import type { Coleccion } from '../../types/coleccion'
+
+// Usuario temporal hasta contar con autenticación.
+const USUARIO_PRUEBA_ID = 2
+
+function formatearFecha(valor: string): string {
+  const fecha = new Date(valor)
+  return Number.isNaN(fecha.getTime()) ? 'Fecha no disponible' : fecha.toLocaleDateString('es-AR')
+}
 
 function CollectionsPage() {
+  const [colecciones, setColecciones] = useState<Coleccion[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [nombre, setNombre] = useState('')
+  const [descripcion, setDescripcion] = useState('')
+  const [creando, setCreando] = useState(false)
+  const [errorCreacion, setErrorCreacion] = useState<string | null>(null)
+  const [confirmacion, setConfirmacion] = useState('')
+  const envioEnCurso = useRef(false)
+  const montado = useRef(false)
+
+  useEffect(() => {
+    let activo = true
+    montado.current = true
+
+    async function cargarColecciones() {
+      try {
+        const datos = await obtenerColecciones(USUARIO_PRUEBA_ID)
+        if (activo) setColecciones(datos)
+      } catch {
+        if (activo) setError('No pudimos cargar tus colecciones. Verificá que el backend esté disponible y volvé a abrir esta página para intentar nuevamente.')
+      } finally {
+        if (activo) setCargando(false)
+      }
+    }
+
+    void cargarColecciones()
+    return () => {
+      activo = false
+      montado.current = false
+    }
+  }, [])
+
+  async function enviarColeccion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (envioEnCurso.current || cargando || error) return
+    setConfirmacion('')
+    const nombreLimpio = nombre.trim()
+    if (!nombreLimpio || nombreLimpio.length > 100) {
+      setErrorCreacion('Ingresá un nombre de entre 1 y 100 caracteres, sin contar los espacios externos.')
+      return
+    }
+
+    envioEnCurso.current = true
+    setCreando(true)
+    setErrorCreacion(null)
+    try {
+      const nueva = await crearColeccion({
+        usuarioId: USUARIO_PRUEBA_ID,
+        nombre: nombreLimpio,
+        ...(descripcion.trim() ? { descripcion: descripcion.trim() } : {}),
+      })
+      if (!montado.current) return
+      setColecciones((actuales) => [...actuales, nueva])
+      setNombre('')
+      setDescripcion('')
+      setConfirmacion(`Se creó la colección "${nueva.nombre}".`)
+    } catch (error) {
+      if (!montado.current) return
+      const mensaje = isAxiosError(error) && error.response?.status === 409
+        ? 'Ya existe una colección con ese nombre o se produjo un conflicto. Probá con otro nombre.'
+        : isAxiosError(error) && !error.response
+          ? 'No pudimos conectar con el backend. Verificá la conexión e intentá nuevamente.'
+          : 'No pudimos crear la colección. Revisá los datos e intentá nuevamente.'
+      setErrorCreacion(mensaje)
+    } finally {
+      envioEnCurso.current = false
+      if (montado.current) setCreando(false)
+    }
+  }
+
   return (
     <>
       <PageHeader title="Colecciones" description="Organizá los juegos de tu biblioteca en grupos que tengan sentido para vos." />
-      <PlaceholderPanel title="Cada colección, una forma de organizarte" description="Acá podrás agrupar juegos por género, favoritos o pendientes. La creación y edición de colecciones estará disponible próximamente." />
+      <section className="placeholder-panel p-4 mb-4" aria-labelledby="crear-coleccion-title">
+        <h2 className="h4 mb-3" id="crear-coleccion-title">Crear colección</h2>
+        <form onSubmit={(event) => void enviarColeccion(event)}>
+          <fieldset disabled={creando || cargando || Boolean(error)}>
+            <legend className="visually-hidden">Datos de la nueva colección</legend>
+            <div className="row g-3">
+              <div className="col-12 col-md-6">
+                <label className="form-label" htmlFor="nombre-coleccion">Nombre</label>
+                <input className="form-control catalog-search" id="nombre-coleccion"
+                  required maxLength={100} value={nombre}
+                  onChange={(event) => setNombre(event.target.value)} />
+              </div>
+              <div className="col-12 col-md-6">
+                <label className="form-label" htmlFor="descripcion-coleccion">Descripción (opcional)</label>
+                <textarea className="form-control catalog-search" id="descripcion-coleccion"
+                  rows={3} value={descripcion} onChange={(event) => setDescripcion(event.target.value)} />
+              </div>
+            </div>
+            <button className="btn btn-primary mt-3" type="submit">{creando ? 'Creando...' : 'Crear colección'}</button>
+          </fieldset>
+          {creando && <p className="secondary-text mt-3 mb-0" role="status">Creando colección…</p>}
+          {errorCreacion && <p className="mt-3 mb-0" role="alert">{errorCreacion}</p>}
+          {confirmacion && <p className="secondary-text mt-3 mb-0" role="status">{confirmacion}</p>}
+        </form>
+      </section>
+      {cargando ? (
+        <p className="placeholder-panel p-4 secondary-text" role="status">Cargando colecciones…</p>
+      ) : error ? (
+        <p className="placeholder-panel p-4" role="alert">{error}</p>
+      ) : colecciones.length === 0 ? (
+        <section className="placeholder-panel p-4">
+          <h2 className="h4">Todavía no tenés colecciones</h2>
+          <p className="secondary-text mb-0">Creá tu primera colección con el formulario de arriba.</p>
+        </section>
+      ) : (
+        <div className="row g-3">
+          {colecciones.map((coleccion) => (
+            <div className="col-12 col-md-6 col-xl-4" key={coleccion.id}>
+              <article className="placeholder-panel h-100 p-4 text-break">
+                <h2 className="h4">{coleccion.nombre}</h2>
+                {coleccion.descripcion && <p className="secondary-text">{coleccion.descripcion}</p>}
+                <dl className="mb-0">
+                  <dt>Fecha de creación</dt>
+                  <dd className="secondary-text">{formatearFecha(coleccion.fechaCreacion)}</dd>
+                  <dt>Cantidad de juegos</dt>
+                  <dd className="secondary-text mb-0">{coleccion.juegos.length}</dd>
+                </dl>
+              </article>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   )
 }
