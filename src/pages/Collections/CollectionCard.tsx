@@ -17,6 +17,8 @@ type Props = {
 function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActualizar, onEliminar }: Props) {
   const [editando, setEditando] = useState(false)
   const [gestionando, setGestionando] = useState(false)
+  const [busquedaJuegos, setBusquedaJuegos] = useState('')
+  const [filtroJuegos, setFiltroJuegos] = useState('todos')
   const [nombre, setNombre] = useState(coleccion.nombre)
   const [descripcion, setDescripcion] = useState(coleccion.descripcion ?? '')
   const [procesando, setProcesando] = useState(false)
@@ -105,6 +107,11 @@ function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActu
   const fecha = new Date(coleccion.fechaCreacion)
   // Incluye también juegos asociados que no aparezcan en la lista del catálogo.
   const opciones = Array.from(new Map([...juegos, ...coleccion.juegos].map((juego) => [juego.id, juego])).values())
+  const textoBuscado = busquedaJuegos.trim().toLowerCase()
+  const opcionesFiltradas = opciones.filter((juego) =>
+    juego.titulo.toLowerCase().includes(textoBuscado) &&
+    (filtroJuegos === 'todos' || coleccion.juegos.some((actual) => actual.id === juego.id)),
+  )
 
   return (
     <article className="placeholder-panel h-100 p-4 text-break">
@@ -149,18 +156,44 @@ function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActu
         {gestionando && (
           <section className="mt-3" aria-label={`Juegos de ${coleccion.nombre}`}>
             <h3 className="h5">Juegos de la colección</h3>
+            <p className="secondary-text small mb-3">{coleccion.juegos.length} juegos en esta colección</p>
+            <div className="row g-2 mb-3">
+              <div className="col-12 col-sm-6">
+                <label className="form-label small" htmlFor={`buscar-juego-${coleccion.id}`}>Buscar por título</label>
+                <input className="form-control form-control-sm catalog-search" type="search"
+                  id={`buscar-juego-${coleccion.id}`} placeholder="Buscar juego..."
+                  value={busquedaJuegos} onChange={(event) => setBusquedaJuegos(event.target.value)} />
+              </div>
+              <div className="col-12 col-sm-6">
+                <label className="form-label small" htmlFor={`filtro-juego-${coleccion.id}`}>Mostrar</label>
+                <select className="form-select form-select-sm catalog-search" data-bs-theme="dark"
+                  id={`filtro-juego-${coleccion.id}`} value={filtroJuegos}
+                  onChange={(event) => setFiltroJuegos(event.target.value)}>
+                  <option value="todos">Todos</option>
+                  <option value="coleccion">En esta colección</option>
+                </select>
+              </div>
+            </div>
             {cargandoJuegos ? <p role="status">Cargando catálogo…</p>
               : errorJuegos ? <p role="alert">{errorJuegos}</p>
-                : opciones.length === 0 ? <p className="secondary-text">No hay juegos disponibles.</p>
-                  : <ul className="list-unstyled mb-0">
-                    {opciones.map((juego) => {
+                : filtroJuegos === 'coleccion' && coleccion.juegos.length === 0
+                  ? <p className="secondary-text" role="status">Esta colección todavía no tiene juegos.</p>
+                  : opciones.length === 0 ? <p className="secondary-text" role="status">No hay juegos disponibles.</p>
+                    : opcionesFiltradas.length === 0
+                      ? <p className="secondary-text" role="status">No se encontraron juegos con esa búsqueda y filtro.</p>
+                  : <ul className="list-unstyled mb-0 collection-game-list" tabIndex={0} aria-label="Listado de juegos">
+                    {opcionesFiltradas.map((juego) => {
                       const pertenece = coleccion.juegos.some((actual) => actual.id === juego.id)
                       return (
-                        <li className="border-top py-3" key={juego.id}>
-                          <p className="mb-1">{juego.titulo}</p>
-                          <p className="secondary-text small mb-2">{pertenece ? 'En esta colección' : 'No pertenece a esta colección'}</p>
-                          <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => cambiarJuego(juego.id)}>
-                            {pertenece ? 'Quitar juego' : 'Agregar juego'}
+                        <li className="collection-game-row border-top py-2" key={juego.id}>
+                          <div className="collection-game-info">
+                            <p className="small mb-0">{juego.titulo}</p>
+                            <span className="secondary-text small">{pertenece ? 'En esta colección' : 'Fuera de la colección'}</span>
+                          </div>
+                          <button className="btn btn-outline-secondary btn-sm flex-shrink-0" type="button"
+                            aria-label={`${pertenece ? 'Quitar' : 'Agregar'} ${juego.titulo}${pertenece ? ' de' : ' a'} la colección`}
+                            onClick={() => cambiarJuego(juego.id)}>
+                            {pertenece ? 'Quitar' : 'Agregar'}
                           </button>
                         </li>
                       )
