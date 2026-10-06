@@ -71,6 +71,10 @@ function CatalogPage() {
     (generoSeleccionado === '' || juego.generos.some((genero) => genero.id === Number(generoSeleccionado))) &&
     (plataformaSeleccionada === '' || juego.plataformas.some((plataforma) => plataforma.id === Number(plataformaSeleccionada))),
   )
+  const juegosOrdenados = [...juegosFiltrados].sort((a, b) => {
+    const diferenciaBiblioteca = Number(juegosGuardados.includes(a.id)) - Number(juegosGuardados.includes(b.id))
+    return diferenciaBiblioteca || a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base' })
+  })
 
   function limpiarFiltros() {
     setBusqueda('')
@@ -184,7 +188,7 @@ function CatalogPage() {
         </p>
       ) : (
         <div className="row g-3">
-          {juegosFiltrados.map((juego) => (
+          {juegosOrdenados.map((juego) => (
             <div className="col-12 col-md-6 col-xl-4" key={juego.id}>
               <article className="placeholder-panel h-100 p-4 text-break">
                 <h2 className="h4">{juego.titulo}</h2>
