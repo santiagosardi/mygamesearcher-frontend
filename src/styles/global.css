@@ -1,4 +1,16 @@
 body { margin: 0; min-width: 320px; }
+.catalog-search {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+.catalog-search::placeholder { color: var(--app-text-secondary); }
+.catalog-search:focus {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .25);
+}
 .app-shell { display: flex; flex-direction: column; min-height: 100svh; }
 .app-navbar {
   background: var(--app-navbar);
