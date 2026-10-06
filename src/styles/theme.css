@@ -1,0 +1,44 @@
+:root {
+  color-scheme: dark;
+  --app-background: #1B2838;
+  --app-navbar: #171A21;
+  --app-surface: #24282E;
+  --app-accent: #607D98;
+  --app-text: #E5E7EB;
+  --app-text-secondary: #A8B2BF;
+  --app-border: #3B4653;
+  --bs-body-bg: var(--app-background);
+  --bs-body-color: var(--app-text);
+  --bs-body-font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bs-secondary-color: var(--app-text-secondary);
+  --bs-border-color: var(--app-border);
+  --bs-link-color: var(--app-text);
+  --bs-link-hover-color: var(--app-text);
+  --bs-primary: var(--app-accent);
+  --bs-primary-rgb: 96, 125, 152;
+}
+
+.btn-primary {
+  --bs-btn-color: var(--app-text);
+  --bs-btn-bg: #425C73;
+  --bs-btn-border-color: var(--app-accent);
+  --bs-btn-hover-color: var(--app-text);
+  --bs-btn-hover-bg: #4B657E;
+  --bs-btn-hover-border-color: var(--app-accent);
+  --bs-btn-active-color: var(--app-text);
+  --bs-btn-active-bg: #354B60;
+  --bs-btn-active-border-color: var(--app-accent);
+  --bs-btn-focus-shadow-rgb: 96, 125, 152;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--app-text);
+  --bs-btn-border-color: var(--app-accent);
+  --bs-btn-hover-color: var(--app-text);
+  --bs-btn-hover-bg: var(--app-surface);
+  --bs-btn-hover-border-color: var(--app-accent);
+  --bs-btn-active-color: var(--app-text);
+  --bs-btn-active-bg: var(--app-surface);
+  --bs-btn-active-border-color: var(--app-accent);
+  --bs-btn-focus-shadow-rgb: 96, 125, 152;
+}
