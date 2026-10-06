@@ -8,11 +8,29 @@ function CatalogPage() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
+  const [generoSeleccionado, setGeneroSeleccionado] = useState('')
+  const [plataformaSeleccionada, setPlataformaSeleccionada] = useState('')
+
+  const generosDisponibles = Array.from(
+    new Map(juegos.flatMap((juego) => juego.generos).map((genero) => [genero.id, genero])).values(),
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+
+  const plataformasDisponibles = Array.from(
+    new Map(juegos.flatMap((juego) => juego.plataformas).map((plataforma) => [plataforma.id, plataforma])).values(),
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
   const textoBuscado = busqueda.trim().toLowerCase()
   const juegosFiltrados = juegos.filter((juego) =>
-    juego.titulo.toLowerCase().includes(textoBuscado),
+    juego.titulo.toLowerCase().includes(textoBuscado) &&
+    (generoSeleccionado === '' || juego.generos.some((genero) => genero.id === Number(generoSeleccionado))) &&
+    (plataformaSeleccionada === '' || juego.plataformas.some((plataforma) => plataforma.id === Number(plataformaSeleccionada))),
   )
+
+  function limpiarFiltros() {
+    setBusqueda('')
+    setGeneroSeleccionado('')
+    setPlataformaSeleccionada('')
+  }
 
   useEffect(() => {
     let activo = true
@@ -41,8 +59,8 @@ function CatalogPage() {
   return (
     <>
       <PageHeader title="Catálogo" description="Explorá videojuegos para descubrir cuáles querés sumar a tu biblioteca." />
-      <div className="row mb-4">
-        <div className="col-12 col-md-8 col-lg-6">
+      <div className="row g-3 mb-4 align-items-end">
+        <div className="col-12 col-lg-4">
           <label className="form-label" htmlFor="busqueda-catalogo">Buscar por título</label>
           <input
             className="form-control catalog-search"
@@ -52,6 +70,41 @@ function CatalogPage() {
             value={busqueda}
             onChange={(event) => setBusqueda(event.target.value)}
           />
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label" htmlFor="genero-catalogo">Género</label>
+          <select
+            className="form-select catalog-search"
+            id="genero-catalogo"
+            data-bs-theme="dark"
+            value={generoSeleccionado}
+            onChange={(event) => setGeneroSeleccionado(event.target.value)}
+          >
+            <option value="">Todos</option>
+            {generosDisponibles.map((genero) => (
+              <option value={genero.id} key={genero.id}>{genero.nombre}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label" htmlFor="plataforma-catalogo">Plataforma</label>
+          <select
+            className="form-select catalog-search"
+            id="plataforma-catalogo"
+            data-bs-theme="dark"
+            value={plataformaSeleccionada}
+            onChange={(event) => setPlataformaSeleccionada(event.target.value)}
+          >
+            <option value="">Todos</option>
+            {plataformasDisponibles.map((plataforma) => (
+              <option value={plataforma.id} key={plataforma.id}>{plataforma.nombre}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-lg-2">
+          <button className="btn btn-outline-secondary w-100" type="button" onClick={limpiarFiltros}>
+            Limpiar filtros
+          </button>
         </div>
       </div>
       {cargando ? (
@@ -65,7 +118,7 @@ function CatalogPage() {
         </section>
       ) : juegosFiltrados.length === 0 ? (
         <p className="placeholder-panel p-4 secondary-text" role="status">
-          No se encontraron juegos con esa búsqueda
+          No se encontraron juegos con los filtros seleccionados
         </p>
       ) : (
         <div className="row g-3">
