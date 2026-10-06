@@ -2,6 +2,13 @@ import type { Juego } from './juego'
 
 export type EstadoBiblioteca = 'PENDIENTE' | 'JUGANDO' | 'COMPLETADO' | 'ABANDONADO'
 
+export interface AgregarJuegoBiblioteca {
+  usuarioId: number
+  juegoId: number
+  estado?: EstadoBiblioteca
+  favorito?: boolean
+}
+
 export interface UsuarioBiblioteca {
   id: number
   nombre: string
