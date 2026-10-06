@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { isAxiosError } from 'axios'
 import PageHeader from '../../components/PageHeader'
 import { obtenerJuegos } from '../../services/juegos.service'
+import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { Juego } from '../../types/juego'
+
+// Usuario de prueba hasta contar con autenticación.
+const USUARIO_PRUEBA_ID = 2
 
 function CatalogPage() {
   const [juegos, setJuegos] = useState<Juego[]>([])
@@ -10,6 +15,47 @@ function CatalogPage() {
   const [busqueda, setBusqueda] = useState('')
   const [generoSeleccionado, setGeneroSeleccionado] = useState('')
   const [plataformaSeleccionada, setPlataformaSeleccionada] = useState('')
+  const [juegosGuardados, setJuegosGuardados] = useState<number[]>([])
+  const [cargandoBiblioteca, setCargandoBiblioteca] = useState(true)
+  const [errorBiblioteca, setErrorBiblioteca] = useState<string | null>(null)
+  const [agregando, setAgregando] = useState<number[]>([])
+  const [mensajes, setMensajes] = useState<Record<number, { texto: string; error: boolean }>>({})
+  const solicitudesEnCurso = useRef(new Set<number>())
+  const montado = useRef(false)
+
+  async function agregarJuego(juegoId: number) {
+    if (cargandoBiblioteca || errorBiblioteca || juegosGuardados.includes(juegoId) || solicitudesEnCurso.current.has(juegoId)) return
+
+    // Bloquea inmediatamente otro envío, incluso antes del siguiente render.
+    solicitudesEnCurso.current.add(juegoId)
+    setAgregando((actuales) => [...actuales, juegoId])
+    setMensajes((actuales) => {
+      const siguientes = { ...actuales }
+      delete siguientes[juegoId]
+      return siguientes
+    })
+
+    try {
+      await agregarJuegoABiblioteca({ usuarioId: USUARIO_PRUEBA_ID, juegoId })
+      if (!montado.current) return
+      setJuegosGuardados((actuales) => [...new Set([...actuales, juegoId])])
+      setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto: 'Juego agregado a tu biblioteca.', error: false } }))
+    } catch (error) {
+      if (!montado.current) return
+      if (isAxiosError(error) && error.response?.status === 409) {
+        setJuegosGuardados((actuales) => [...new Set([...actuales, juegoId])])
+        setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto: 'Este juego ya estaba en tu biblioteca.', error: false } }))
+      } else {
+        const texto = isAxiosError(error) && !error.response
+          ? 'No pudimos conectar con el backend. Verificá la conexión e intentá nuevamente.'
+          : 'No pudimos agregar el juego. Intentá nuevamente.'
+        setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto, error: true } }))
+      }
+    } finally {
+      solicitudesEnCurso.current.delete(juegoId)
+      if (montado.current) setAgregando((actuales) => actuales.filter((id) => id !== juegoId))
+    }
+  }
 
   const generosDisponibles = Array.from(
     new Map(juegos.flatMap((juego) => juego.generos).map((genero) => [genero.id, genero])).values(),
@@ -34,6 +80,18 @@ function CatalogPage() {
 
   useEffect(() => {
     let activo = true
+    montado.current = true
+
+    async function cargarBiblioteca() {
+      try {
+        const entradas = await obtenerBiblioteca(USUARIO_PRUEBA_ID)
+        if (activo) setJuegosGuardados(entradas.map((entrada) => entrada.juego.id))
+      } catch {
+        if (activo) setErrorBiblioteca('No pudimos consultar tu biblioteca. Volvé a abrir el catálogo para intentar nuevamente antes de agregar juegos.')
+      } finally {
+        if (activo) setCargandoBiblioteca(false)
+      }
+    }
 
     async function cargarJuegos() {
       try {
@@ -49,10 +107,12 @@ function CatalogPage() {
     }
 
     void cargarJuegos()
+    void cargarBiblioteca()
 
     // Ignora el resultado de esta consulta si se abandona la pantalla.
     return () => {
       activo = false
+      montado.current = false
     }
   }, [])
 
@@ -107,6 +167,8 @@ function CatalogPage() {
           </button>
         </div>
       </div>
+      {cargandoBiblioteca && <p className="secondary-text" role="status">Consultando tu biblioteca…</p>}
+      {errorBiblioteca && <p className="placeholder-panel p-3" role="alert">{errorBiblioteca}</p>}
       {cargando ? (
         <p className="placeholder-panel p-4 secondary-text" role="status">Cargando juegos…</p>
       ) : error ? (
@@ -135,6 +197,21 @@ function CatalogPage() {
                   <dt>Plataformas</dt>
                   <dd className="secondary-text mb-0">{juego.plataformas.map((plataforma) => plataforma.nombre).join(', ') || 'No informadas'}</dd>
                 </dl>
+                <button
+                  className="btn btn-primary w-100 mt-4"
+                  type="button"
+                  disabled={cargandoBiblioteca || Boolean(errorBiblioteca) || juegosGuardados.includes(juego.id) || agregando.includes(juego.id)}
+                  onClick={() => void agregarJuego(juego.id)}
+                >
+                  {juegosGuardados.includes(juego.id)
+                    ? 'Ya está en tu biblioteca'
+                    : agregando.includes(juego.id) ? 'Agregando...' : 'Agregar a mi biblioteca'}
+                </button>
+                {mensajes[juego.id] && (
+                  <p className="secondary-text mt-3 mb-0" role={mensajes[juego.id].error ? 'alert' : 'status'}>
+                    {mensajes[juego.id].texto}
+                  </p>
+                )}
               </article>
             </div>
           ))}
