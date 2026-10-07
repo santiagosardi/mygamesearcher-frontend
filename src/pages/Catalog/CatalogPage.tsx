@@ -6,6 +6,7 @@ import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibli
 import type { Juego } from '../../types/juego'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
+import catalogArtwork from '../../assets/home-cards/catalog-rabbid.png'
 
 
 function CatalogPage() {
@@ -135,9 +136,16 @@ function CatalogPage() {
   }, [isLoading, isAuthenticated, user])
 
   return (
-    <>
-      <PageHeader title="Catálogo" description="Explorá videojuegos para descubrir cuáles querés sumar a tu biblioteca." />
-      <div className="row g-3 mb-4 align-items-end">
+    <div className="catalog-page">
+      <div className="catalog-banner mb-4">
+        <PageHeader title="Catálogo" description="Explorá videojuegos para descubrir cuáles querés sumar a tu biblioteca." />
+        <div className="catalog-banner-art" aria-hidden="true">
+          <img src={catalogArtwork} alt="" width={1254} height={1254} />
+        </div>
+      </div>
+      <div className="catalog-filters mb-4">
+      <p className="catalog-filter-prompt">¿Qué jugamos hoy?</p>
+      <div className="row g-3 align-items-end">
         <div className="col-12 col-lg-4">
           <label className="form-label" htmlFor="busqueda-catalogo">Buscar por título</label>
           <input
@@ -185,6 +193,7 @@ function CatalogPage() {
           </button>
         </div>
       </div>
+      </div>
       {cargandoBiblioteca && <p className="secondary-text" role="status">Consultando tu biblioteca…</p>}
       {errorBiblioteca && <p className="placeholder-panel p-3" role="alert">{errorBiblioteca}</p>}
       {cargando ? (
@@ -201,20 +210,37 @@ function CatalogPage() {
           No se encontraron juegos con los filtros seleccionados
         </p>
       ) : (
-        <div className="row g-3">
+        <div className="row g-4">
           {juegosOrdenados.map((juego) => (
-            <div className="col-12 col-md-6 col-xl-4" key={juego.id}>
-              <article className="placeholder-panel h-100 p-4 text-break">
+            <div className="col-12 col-md-6 col-xl-4 col-xxl-3" key={juego.id}>
+              <article className="catalog-game-card h-100 text-break">
+                <div className="catalog-cover" aria-hidden="true">
+                  {juego.urlImagen?.trim() ? (
+                    <img src={juego.urlImagen} alt="" loading="lazy" decoding="async" />
+                  ) : (
+                    <div className="catalog-cover-fallback">
+                      <span>{juego.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="catalog-game-content">
+                <dl className="catalog-genres mb-0">
+                  <dt className="visually-hidden">Géneros</dt>
+                  {juego.generos.length > 0 ? juego.generos.map((genero) => (
+                    <dd className="catalog-chip mb-0" key={genero.id}>{genero.nombre}</dd>
+                  )) : <dd className="mb-0">No informados</dd>}
+                </dl>
                 <h2 className="h4">{juego.titulo}</h2>
-                <p className="secondary-text">{juego.descripcion?.trim() || 'Sin descripción disponible.'}</p>
-                <dl className="mb-0">
+                <p className="catalog-game-description secondary-text">{juego.descripcion?.trim() || 'Sin descripción disponible.'}</p>
+                <dl className="catalog-game-details mb-0">
                   <dt>Desarrollador</dt>
                   <dd className="secondary-text">{juego.desarrollador?.trim() || 'No informado'}</dd>
-                  <dt>Géneros</dt>
-                  <dd className="secondary-text">{juego.generos.map((genero) => genero.nombre).join(', ') || 'No informados'}</dd>
                   <dt>Plataformas</dt>
-                  <dd className="secondary-text mb-0">{juego.plataformas.map((plataforma) => plataforma.nombre).join(', ') || 'No informadas'}</dd>
+                  {juego.plataformas.length > 0 ? juego.plataformas.map((plataforma) => (
+                    <dd className="catalog-chip catalog-chip-platform mb-0" key={plataforma.id}>{plataforma.nombre}</dd>
+                  )) : <dd className="secondary-text mb-0">No informadas</dd>}
                 </dl>
+                <div className="catalog-game-actions">
                 {!isLoading && !isAuthenticated ? (
                   <Link className="btn btn-primary w-100 mt-4" to="/login">Iniciar sesión para agregar</Link>
                 ) : <button
@@ -232,12 +258,14 @@ function CatalogPage() {
                     {mensajes[juego.id].texto}
                   </p>
                 )}
+                </div>
+                </div>
               </article>
             </div>
           ))}
         </div>
       )}
-    </>
+    </div>
   )
 }
 export default CatalogPage
