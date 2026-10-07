@@ -977,3 +977,102 @@ body {
   .library-banner, .library-empty, .library-page .library-game-card { background: Canvas; border-color: CanvasText; }
   .library-state, .library-favorite, .library-empty-mark { background: Canvas; color: CanvasText; border-color: CanvasText; }
 }
+
+/* Colecciones: Hollow Knight, navy y acentos celestes. */
+.collections-page { font-family: "Space Grotesk", system-ui, sans-serif; }
+.collections-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .65fr);
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  border: 1px solid rgba(139, 177, 211, .1);
+  border-radius: 1.2rem;
+  background: radial-gradient(ellipse at 80% 35%, rgba(94, 129, 185, .12), transparent 65%),
+    linear-gradient(135deg, rgba(19, 29, 49, .8), rgba(15, 21, 38, .5));
+}
+.collections-banner .page-header { margin-bottom: 0 !important; }
+.collections-banner .page-header h1 { font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.15; text-wrap: balance; color: #dceaf8; }
+.collections-banner .page-description { max-width: 32rem; color: #bdc9d9; }
+.collections-banner-art {
+  width: min(100%, 17rem);
+  justify-self: center;
+  mask-image: radial-gradient(ellipse at center, #000 38%, transparent 74%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 38%, transparent 74%);
+}
+.collections-banner-art img { display: block; width: 100%; height: auto; }
+.collections-page .collections-create {
+  border-color: rgba(142, 171, 207, .23);
+  border-radius: 1rem;
+  background: radial-gradient(ellipse at 0% 0%, rgba(98, 109, 175, .08), transparent 70%), #142135;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+.collections-create h2 { color: #dce9f7; letter-spacing: -.025em; }
+.collections-page .form-label { color: #c0d0e2; }
+.collections-page .catalog-search { background: #101c2f; border-color: rgba(146, 168, 200, .3); border-radius: .65rem; }
+.collections-page .catalog-search:focus {
+  background: #18283d;
+  color: #f2f6fa;
+  border-color: #a3cde6;
+  outline: 2px solid #a9bce1;
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.collections-create .form-control { min-height: 2.75rem; }
+.collections-page .btn-primary { background: linear-gradient(115deg, #b5afd8, #a9c6e7, #a4d6e7); color: #101b2c; border-color: transparent; }
+.collections-page .btn-primary:hover { background: linear-gradient(115deg, #c5bee4, #bbd6ed, #bce3ee); color: #101b2c; }
+.collections-page .collections-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  text-align: center;
+  border-color: rgba(144, 172, 211, .2);
+  border-radius: 1rem;
+  background: radial-gradient(ellipse at 50% 0%, rgba(104, 136, 184, .1), transparent 70%), #121e30;
+}
+.collections-empty h2 { margin: 0; }
+.collections-empty p { max-width: 32rem; }
+.collections-empty-mark { font-size: 2.8rem; line-height: 1; color: #accbe5; }
+.collections-grid article {
+  min-width: 0;
+  border-color: rgba(144, 162, 200, .24);
+  border-radius: 1rem;
+  background: linear-gradient(150deg, #19263c, #131d30);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .15);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.collections-grid article > h2 { color: #e3ecf8; font-size: 1.3rem; line-height: 1.35; letter-spacing: -.025em; }
+.collections-grid article > dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .5rem .8rem; align-items: center; }
+.collections-grid article > dl dt { font-size: .75rem; color: #abbfd5; font-weight: 500; }
+.collections-grid article > dl dd { margin: 0; font-size: .85rem; }
+.collections-grid .btn { font-size: .8rem; min-height: 2.5rem; }
+.collections-grid .btn-outline-secondary { color: #bed4e7; border-color: rgba(147, 170, 204, .35); }
+.collections-grid .btn-outline-secondary:hover { color: #e5f0fa; background: rgba(105, 133, 180, .15); border-color: #9cb9d7; }
+.collections-grid article > fieldset > .d-flex { align-items: stretch; }
+.collections-grid article > fieldset > .d-flex > .btn { flex: 1 1 auto; }
+.collections-grid article > fieldset > .d-flex > .btn:last-child { color: #dbb2c1; border-color: rgba(191, 137, 161, .35); }
+.collections-grid article > fieldset > .d-flex > .btn:last-child:hover { background: rgba(152, 82, 112, .15); border-color: #c199b0; }
+.collections-grid article > fieldset > section {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(146, 170, 205, .18);
+}
+.collections-grid .collection-game-list { border-radius: .5rem; background: rgba(8, 16, 29, .3); padding-inline: .5rem; }
+.collections-grid .collection-game-info { padding-block: .25rem; }
+.collections-page .btn:focus-visible, .collections-page .collection-game-list:focus-visible { outline: 2px solid #c6e1f2; outline-offset: 4px; }
+@media (hover: hover) {
+  .collections-grid article:hover { border-color: rgba(155, 188, 218, .55); box-shadow: 0 10px 26px rgba(38, 50, 84, .2); }
+}
+@media (max-width: 767.98px) {
+  .collections-banner { grid-template-columns: minmax(0, 1fr); padding: 1.5rem; }
+  .collections-banner-art { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collections-grid article, .collections-page .btn { transition: none; }
+  .collections-page .btn:not(:disabled):hover { transform: none; }
+}
+@media (forced-colors: active) {
+  .collections-banner, .collections-page .collections-create, .collections-page .collections-empty, .collections-grid article { background: Canvas; border-color: CanvasText; }
+  .collections-page .btn-primary { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
+  .collections-empty-mark { color: CanvasText; }
+}
