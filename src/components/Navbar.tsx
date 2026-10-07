@@ -32,6 +32,11 @@ function Navbar() {
                 <NavLink className="nav-link" to={to} end onClick={() => setIsOpen(false)}>{label}</NavLink>
               </li>
             ))}
+            {!isLoading && user?.rol === 'ADMIN' && (
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/admin" onClick={() => setIsOpen(false)}>Administración</NavLink>
+              </li>
+            )}
           </ul>
           <div className="d-flex flex-wrap align-items-center gap-2 mt-3 mt-lg-0 ms-lg-3">
             {isLoading ? <span className="secondary-text small" role="status">Verificando sesión…</span>

@@ -8,6 +8,7 @@ import RecommendationsPage from './pages/Recommendations/RecommendationsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/Login/LoginPage'
 import ProtectedRoute from './auth/ProtectedRoute'
+import AdminPage from './pages/Admin/AdminPage'
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
           <Route path="biblioteca" element={<LibraryPage />} />
           <Route path="colecciones" element={<CollectionsPage />} />
           <Route path="recomendaciones" element={<RecommendationsPage />} />
+        </Route>
+        <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+          <Route path="admin" element={<AdminPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
