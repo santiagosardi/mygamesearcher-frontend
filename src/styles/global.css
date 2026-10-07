@@ -1224,3 +1224,142 @@ body {
   .admin-overview-header, .admin-overview .admin-access-card { background: Canvas; border-color: CanvasText; }
   .admin-overview .admin-access-button { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
 }
+
+/* Login: acceso claro, ilustración secundaria y estilos aislados. */
+.login-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+  align-items: center;
+  gap: clamp(2rem, 4vw, 3.5rem);
+  max-width: 62rem;
+  margin-inline: auto;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+}
+.login-content { min-width: 0; }
+.login-page .page-header .eyebrow { color: #b4c9ed; letter-spacing: .15em; }
+.login-page .page-header h1 { font-size: clamp(2rem, 3.5vw, 2.8rem); line-height: 1.2; color: #eee5f6; }
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .login-page .page-header h1 {
+    background: linear-gradient(105deg, #cbb9ee 0%, #ebc0dd 50%, #b9e4f3 100%);
+    background-size: 11em 100%;
+    background-repeat: no-repeat;
+    background-color: #b9e4f3;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+}
+.login-page .page-description { max-width: 28rem; color: #c5d0df; }
+.login-page .login-form {
+  border: 1px solid rgba(166, 149, 202, .25);
+  border-radius: 1rem;
+  background: radial-gradient(ellipse at 0% 0%, rgba(129, 98, 177, .08), transparent 70%), #142035;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+.login-form .form-label { color: #cdd5e4; }
+.login-form .form-control {
+  min-height: 2.85rem;
+  border-radius: .65rem;
+  background-color: #0e1a2d;
+  border-color: rgba(151, 166, 198, .32);
+  color: #f2f6fa;
+}
+.login-form .form-control:focus {
+  background-color: #17273e;
+  border-color: #a5cfe8;
+  outline: 2px solid #bda8dc;
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.login-form .btn-primary {
+  min-height: 2.85rem;
+  margin-top: .25rem;
+  border-radius: .65rem;
+  border-color: transparent;
+  background: linear-gradient(115deg, #bda8df, #dbb0d3, #abd8ea);
+  color: #101b2d;
+}
+.login-form .btn-primary:hover { background: linear-gradient(115deg, #cbb9e9, #e5bfdc, #bfe5f0); color: #101b2d; }
+.login-form [role='alert'] { color: #e8c3d2; line-height: 1.65; }
+.login-register-link { margin-bottom: 0; font-size: .9rem; }
+.login-register-link a { color: #c7c3e9; text-underline-offset: .25em; }
+.login-register-link a:hover { color: #d7e7f5; }
+.login-page a:focus-visible, .login-page button:focus-visible { outline: 2px solid #d4e6f6; outline-offset: 4px; }
+.login-artwork {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 1.2rem;
+  background: transparent;
+  box-shadow: none;
+}
+.login-artwork img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 34rem;
+  object-fit: contain;
+  mask-image: radial-gradient(ellipse at center, #000 48%, rgba(0, 0, 0, .9) 65%, transparent 98%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 48%, rgba(0, 0, 0, .9) 65%, transparent 98%);
+}
+.login-content { animation: login-enter .5s ease-out both; }
+.login-artwork { animation: login-enter .6s ease-out .06s both; }
+@keyframes login-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 991.98px) {
+  .login-page { grid-template-columns: minmax(0, 1fr); max-width: 36rem; gap: 2rem; }
+  .login-artwork { width: 100%; max-width: 24rem; justify-self: center; }
+  .login-artwork img { max-height: 24rem; }
+}
+@media (max-width: 575.98px) {
+  .login-artwork { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-content, .login-artwork { animation: none; }
+  .login-page .btn { transition: none; }
+  .login-page .btn:not(:disabled):hover { transform: none; }
+}
+@media (forced-colors: active) {
+  .login-page .login-form, .login-artwork { background: Canvas; border-color: CanvasText; }
+  .login-page .page-header h1, .login-page .page-header .eyebrow, .login-page .page-description { background: none; color: CanvasText; }
+  .login-form .btn-primary { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
+  .login-form [role='alert'], .login-register-link a { color: CanvasText; }
+}
+
+/* Ajuste final de Login: título expresivo y espacio vertical equilibrado. */
+.login-page {
+  min-height: calc(100svh - 14rem);
+  max-width: 65rem;
+  padding-block: 1rem;
+  background: radial-gradient(ellipse at 50% 45%, rgba(106, 89, 161, .045), transparent 70%);
+}
+.login-page .page-header h1.login-title {
+  font-family: "Oxanium", "Space Grotesk", system-ui, sans-serif;
+  font-size: clamp(2.6rem, 4vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1.2;
+  background: none;
+  color: #eee5f6;
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .login-page .page-header h1.login-title {
+    width: fit-content;
+    max-width: 100%;
+    background: linear-gradient(105deg, #cbb9ee, #ebc0dd 50%, #b9e4f3);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+}
+.login-artwork img { max-height: 37rem; }
+@media (max-width: 991.98px) {
+  .login-page { max-width: 36rem; }
+  .login-artwork img { max-height: 24rem; }
+}
+@media (forced-colors: active) {
+  .login-page { background: Canvas; }
+  .login-page .page-header h1.login-title { background: none; color: CanvasText; }
+}

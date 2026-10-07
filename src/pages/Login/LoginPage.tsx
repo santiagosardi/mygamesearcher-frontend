@@ -2,8 +2,8 @@ import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { isAxiosError } from 'axios'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import PageHeader from '../../components/PageHeader'
 import { useAuth } from '../../auth/useAuth'
+import loginArtwork from '../../assets/auth/login-characters.png'
 
 function LoginPage() {
   const { login, isAuthenticated, isLoading, sessionError } = useAuth()
@@ -40,12 +40,16 @@ function LoginPage() {
   if (isLoading) return <p role="status">Verificando sesión…</p>
   if (isAuthenticated) return <Navigate to="/catalogo" replace />
   return (
-    <div className="row justify-content-center">
-      <div className="col-12 col-md-8 col-lg-6">
-        <PageHeader title="Iniciar sesión" description="Ingresá para acceder a tus espacios personales." />
+    <div className="login-page">
+      <div className="login-content">
+        <header className="page-header mb-4">
+          <p className="eyebrow">MyGameSearcher</p>
+          <h1 className="login-title">Iniciar sesión</h1>
+          <p className="page-description mb-0">Ingresá para acceder a tus espacios personales.</p>
+        </header>
         {location.state?.registroExitoso === true && <p className="placeholder-panel p-3" role="status">Tu cuenta se creó correctamente. Ya podés iniciar sesión.</p>}
         {sessionError && <p role="alert">{sessionError}</p>}
-        <form className="placeholder-panel p-4" onSubmit={(event) => void enviar(event)}>
+        <form className="login-form placeholder-panel p-4" onSubmit={(event) => void enviar(event)}>
           <fieldset disabled={enviando}>
             <legend className="visually-hidden">Credenciales de acceso</legend>
             <label className="form-label" htmlFor="login-email">Email</label>
@@ -58,7 +62,10 @@ function LoginPage() {
           </fieldset>
           {error && <p className="mt-3 mb-0" role="alert">{error}</p>}
         </form>
-        <p className="mt-3"><Link to="/registro">¿No tenés cuenta? Registrate</Link></p>
+        <p className="login-register-link mt-3"><Link to="/registro">¿No tenés cuenta? Registrate</Link></p>
+      </div>
+      <div className="login-artwork" aria-hidden="true">
+        <img src={loginArtwork} alt="" width={1122} height={1402} decoding="async" />
       </div>
     </div>
   )
