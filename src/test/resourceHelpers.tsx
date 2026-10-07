@@ -6,6 +6,9 @@ import api from '../services/api'
 import { AuthContext } from '../auth/AuthContext'
 import CatalogPage from '../pages/Catalog/CatalogPage'
 import LibraryPage from '../pages/Library/LibraryPage'
+import CollectionsPage from '../pages/Collections/CollectionsPage'
+import RecommendationsPage from '../pages/Recommendations/RecommendationsPage'
+import type { Coleccion } from '../types/coleccion'
 import type { Juego } from '../types/juego'
 import type { Biblioteca } from '../types/biblioteca'
 import { usuario } from './helpers'
@@ -27,11 +30,18 @@ export function mockHttp(handler: (config: InternalAxiosRequestConfig) => unknow
   return adapter
 }
 
-export function renderResource(path: '/catalogo' | '/biblioteca', autenticado = true) {
+export function coleccion(cambios: Partial<Coleccion> = {}): Coleccion {
+  return { id: 73, nombre: 'Colección ficticia', descripcion: 'Grupo de prueba', usuario,
+    juegos: [juegos[0]], fechaCreacion: '2026-01-03T12:00:00Z', ...cambios }
+}
+
+export function renderResource(path: '/catalogo' | '/biblioteca' | '/colecciones' | '/recomendaciones', autenticado = true) {
   if (autenticado) guardarToken('token-ficticio')
   return render(<MemoryRouter initialEntries={[path]}><AuthContext.Provider value={{ user: autenticado ? usuario : null,
     isAuthenticated: autenticado, isLoading: false, sessionError: null, login: vi.fn(), logout: vi.fn() }}>
     <Routes><Route path="/catalogo" element={<CatalogPage />} /><Route path="/biblioteca" element={<LibraryPage />} />
+      <Route path="/colecciones" element={<CollectionsPage />} />
+      <Route path="/recomendaciones" element={<RecommendationsPage />} />
       <Route path="/login" element={<h1>Login de prueba</h1>} /></Routes>
   </AuthContext.Provider></MemoryRouter>)
 }
