@@ -9,6 +9,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/Login/LoginPage'
 import ProtectedRoute from './auth/ProtectedRoute'
 import AdminPage from './pages/Admin/AdminPage'
+import AdminGamesPage from './pages/Admin/AdminGamesPage'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         </Route>
         <Route element={<ProtectedRoute roles={['ADMIN']} />}>
           <Route path="admin" element={<AdminPage />} />
+          <Route path="admin/juegos" element={<AdminGamesPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>

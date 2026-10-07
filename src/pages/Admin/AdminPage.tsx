@@ -1,4 +1,5 @@
 import PageHeader from '../../components/PageHeader'
+import { Link } from 'react-router-dom'
 
 const secciones = [
   { titulo: 'Juegos', descripcion: 'Administrá los juegos del catálogo.' },
@@ -17,7 +18,8 @@ function AdminPage() {
             <section className="placeholder-panel h-100 p-4">
               <h2 className="h4">{titulo}</h2>
               <p className="secondary-text">{descripcion}</p>
-              <span className="status-label">Gestión próximamente</span>
+              {titulo === 'Juegos' ? <Link className="btn btn-outline-secondary" to="/admin/juegos">Gestionar juegos</Link>
+                : <span className="status-label">Gestión próximamente</span>}
             </section>
           </div>
         ))}
