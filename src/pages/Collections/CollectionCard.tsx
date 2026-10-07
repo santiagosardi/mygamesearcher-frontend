@@ -6,6 +6,9 @@ import type { ActualizarColeccion, Coleccion } from '../../types/coleccion'
 import type { Juego } from '../../types/juego'
 
 type Props = {
+  idsBiblioteca: ReadonlySet<number>
+  cargandoBiblioteca: boolean
+  errorBiblioteca: string | null
   coleccion: Coleccion
   juegos: Juego[]
   cargandoJuegos: boolean
@@ -14,7 +17,7 @@ type Props = {
   onEliminar: (coleccion: Coleccion) => void
 }
 
-function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActualizar, onEliminar }: Props) {
+function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActualizar, onEliminar, idsBiblioteca, cargandoBiblioteca, errorBiblioteca }: Props) {
   const [editando, setEditando] = useState(false)
   const [gestionando, setGestionando] = useState(false)
   const [busquedaJuegos, setBusquedaJuegos] = useState('')
@@ -110,7 +113,8 @@ function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActu
   const textoBuscado = busquedaJuegos.trim().toLowerCase()
   const opcionesFiltradas = opciones.filter((juego) =>
     juego.titulo.toLowerCase().includes(textoBuscado) &&
-    (filtroJuegos === 'todos' || coleccion.juegos.some((actual) => actual.id === juego.id)),
+    (filtroJuegos === 'todos' ||
+      (filtroJuegos === 'biblioteca' ? idsBiblioteca.has(juego.id) : coleccion.juegos.some((actual) => actual.id === juego.id))),
   )
 
   return (
@@ -171,11 +175,16 @@ function CollectionCard({ coleccion, juegos, cargandoJuegos, errorJuegos, onActu
                   onChange={(event) => setFiltroJuegos(event.target.value)}>
                   <option value="todos">Todos</option>
                   <option value="coleccion">En esta colección</option>
+                  <option value="biblioteca" disabled={cargandoBiblioteca || Boolean(errorBiblioteca)}>En mi biblioteca</option>
                 </select>
               </div>
             </div>
+            {cargandoBiblioteca && <p className="secondary-text small" role="status">Cargando biblioteca…</p>}
+            {errorBiblioteca && <p className="secondary-text small" role="alert">{errorBiblioteca}</p>}
             {cargandoJuegos ? <p role="status">Cargando catálogo…</p>
               : errorJuegos ? <p role="alert">{errorJuegos}</p>
+                : filtroJuegos === 'biblioteca' && idsBiblioteca.size === 0
+                  ? <p className="secondary-text" role="status">No tenés juegos en tu biblioteca.</p>
                 : filtroJuegos === 'coleccion' && coleccion.juegos.length === 0
                   ? <p className="secondary-text" role="status">Esta colección todavía no tiene juegos.</p>
                   : opciones.length === 0 ? <p className="secondary-text" role="status">No hay juegos disponibles.</p>

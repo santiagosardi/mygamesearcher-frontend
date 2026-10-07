@@ -7,6 +7,8 @@ import type { Coleccion } from '../../types/coleccion'
 import type { Juego } from '../../types/juego'
 import { obtenerJuegos } from '../../services/juegos.service'
 import CollectionCard from './CollectionCard'
+import { obtenerBiblioteca } from '../../services/bibliotecas.service'
+import type { Biblioteca } from '../../types/biblioteca'
 
 
 function CollectionsPage() {
@@ -23,6 +25,10 @@ function CollectionsPage() {
   const [juegos, setJuegos] = useState<Juego[]>([])
   const [cargandoJuegos, setCargandoJuegos] = useState(true)
   const [errorJuegos, setErrorJuegos] = useState<string | null>(null)
+  const [idsBiblioteca, setIdsBiblioteca] = useState<Set<number>>(new Set())
+  const [cargandoBiblioteca, setCargandoBiblioteca] = useState(true)
+  const [errorBiblioteca, setErrorBiblioteca] = useState<string | null>(null)
+  const consultaBiblioteca = useRef<Promise<Biblioteca[]> | null>(null)
 
   function actualizarLocal(actualizada: Coleccion) {
     setColecciones((actuales) => actuales.map((coleccion) => coleccion.id === actualizada.id ? actualizada : coleccion))
@@ -36,6 +42,19 @@ function CollectionsPage() {
   useEffect(() => {
     let activo = true
     montado.current = true
+
+    async function cargarBiblioteca() {
+      try {
+        // Comparte la consulta también durante la repetición de efectos de StrictMode.
+        consultaBiblioteca.current ??= obtenerBiblioteca()
+        const entradas = await consultaBiblioteca.current
+        if (activo) setIdsBiblioteca(new Set(entradas.map((entrada) => entrada.juego.id)))
+      } catch {
+        if (activo) setErrorBiblioteca('No pudimos cargar tu biblioteca. Podés seguir usando Todos y En esta colección.')
+      } finally {
+        if (activo) setCargandoBiblioteca(false)
+      }
+    }
 
     async function cargarJuegos() {
       try {
@@ -61,6 +80,7 @@ function CollectionsPage() {
 
     void cargarColecciones()
     void cargarJuegos()
+    void cargarBiblioteca()
     return () => {
       activo = false
       montado.current = false
@@ -146,6 +166,7 @@ function CollectionsPage() {
           {colecciones.map((coleccion) => (
             <div className="col-12 col-md-6 col-xl-4" key={coleccion.id}>
               <CollectionCard coleccion={coleccion} juegos={juegos} cargandoJuegos={cargandoJuegos}
+                idsBiblioteca={idsBiblioteca} cargandoBiblioteca={cargandoBiblioteca} errorBiblioteca={errorBiblioteca}
                 errorJuegos={errorJuegos} onActualizar={actualizarLocal} onEliminar={eliminarLocal} />
             </div>
           ))}
