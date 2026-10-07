@@ -7,6 +7,7 @@ import { agregarJuegoABiblioteca } from '../../services/bibliotecas.service'
 import type { RespuestaRecomendaciones } from '../../types/recomendacion'
 import { obtenerColecciones } from '../../services/colecciones.service'
 import type { Coleccion } from '../../types/coleccion'
+import recommendationsArtwork from '../../assets/home-cards/recommendations-group.png'
 
 
 function RecommendationsPage() {
@@ -125,9 +126,15 @@ function RecommendationsPage() {
   }, [actualizarRanking])
 
   return (
-    <>
-      <PageHeader title="Recomendaciones" description="Descubrí nuevas opciones para tu próxima sesión de juego." />
-      <div className="row mb-4">
+    <div className="recommendations-page">
+      <div className="recommendations-banner mb-4">
+        <PageHeader title="Juegos elegidos para vos." description="Descubrí recomendaciones basadas en tus gustos, tu biblioteca y tus colecciones." />
+        <div className="recommendations-banner-art" aria-hidden="true">
+          <img src={recommendationsArtwork} alt="" width={1254} height={1254} />
+        </div>
+      </div>
+      <div className="recommendations-source mb-4">
+      <div className="row">
         <div className="col-12 col-md-8 col-lg-6">
           <label className="form-label" htmlFor="fuente-recomendaciones">Recomendar según</label>
           <select className="form-select catalog-search" id="fuente-recomendaciones" data-bs-theme="dark"
@@ -141,6 +148,7 @@ function RecommendationsPage() {
           {cargandoColecciones && <p className="secondary-text small mt-2" role="status">Cargando colecciones…</p>}
           {errorColecciones && <p className="secondary-text small mt-2" role="alert">{errorColecciones}</p>}
         </div>
+      </div>
       </div>
       {respuesta && fuenteRespuesta !== fuente && (
         <p className="secondary-text small" role="status">El ranking visible corresponde a la fuente anterior hasta que se complete la nueva consulta.</p>
@@ -161,7 +169,7 @@ function RecommendationsPage() {
       ) : !respuesta && errorActualizacion ? (
         null
       ) : !respuesta || respuesta.recomendaciones.length === 0 ? (
-        <section className="placeholder-panel p-4">
+        <section className="recommendations-empty placeholder-panel p-4 p-md-5">
           <h2 className="h4">Todavía no hay recomendaciones disponibles</h2>
           {respuesta?.mensaje && <p className="secondary-text">{respuesta.mensaje}</p>}
           <p className="secondary-text">Agregar juegos a tu biblioteca puede ayudar a encontrar nuevas recomendaciones.</p>
@@ -170,36 +178,47 @@ function RecommendationsPage() {
       ) : (
         <>
           {respuesta.mensaje && <p className="secondary-text">{respuesta.mensaje}</p>}
-          <div className="row g-3">
+          <div className="row g-4">
             {respuesta.recomendaciones.map(({ juego, puntaje, motivos }) => (
               <div className="col-12 col-md-6 col-xl-4" key={juego.id}>
-                <article className="placeholder-panel h-100 p-4 text-break">
-                  <span className="status-label mb-3">Puntaje de recomendación: <strong className="fs-5">{puntaje}</strong></span>
+                <article className="recommendation-card catalog-game-card h-100 text-break">
+                  <div className="catalog-cover" aria-hidden="true">
+                    {juego.urlImagen?.trim() ? (
+                      <img src={juego.urlImagen} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="catalog-cover-fallback"><span>{juego.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span></div>
+                    )}
+                  </div>
+                  <div className="recommendation-content">
+                  <span className="recommendation-score status-label">Puntaje de recomendación: <strong className="fs-5">{puntaje}</strong></span>
                   <h2 className="h4">{juego.titulo}</h2>
                   {juego.descripcion && <p className="secondary-text">{juego.descripcion}</p>}
-                  <dl>
+                  <dl className="recommendation-details">
                     {juego.desarrollador && <><dt>Desarrollador</dt><dd className="secondary-text">{juego.desarrollador}</dd></>}
                     {juego.generos.length > 0 && <><dt>Géneros</dt><dd className="secondary-text">{juego.generos.map((genero) => genero.nombre).join(', ')}</dd></>}
                     {juego.plataformas.length > 0 && <><dt>Plataformas</dt><dd className="secondary-text">{juego.plataformas.map((plataforma) => plataforma.nombre).join(', ')}</dd></>}
                     {juego.caracteristicas.length > 0 && <><dt>Características</dt><dd className="secondary-text">{juego.caracteristicas.map((caracteristica) => caracteristica.nombre).join(', ')}</dd></>}
                   </dl>
+                  <div className="recommendation-reasons">
                   <h3 className="h6">¿Por qué se recomienda?</h3>
                   <ul className="secondary-text small ps-3 mb-0">
                     {motivos.map((motivo) => <li key={motivo}>{motivo}</li>)}
                   </ul>
-                  <button className="btn btn-primary w-100 mt-4" type="button"
+                  </div>
+                  <button className="recommendation-add btn btn-primary w-100" type="button"
                     disabled={agregando.includes(juego.id) || guardados.includes(juego.id)}
                     onClick={() => void agregarJuego(juego.id, juego.titulo)}>
                     {guardados.includes(juego.id) ? 'Ya está en tu biblioteca'
                       : agregando.includes(juego.id) ? 'Agregando...' : 'Agregar a mi biblioteca'}
                   </button>
+                  </div>
                 </article>
               </div>
             ))}
           </div>
         </>
       )}
-    </>
+    </div>
   )
 }
 export default RecommendationsPage

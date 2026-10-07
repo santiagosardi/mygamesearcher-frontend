@@ -1076,3 +1076,82 @@ body {
   .collections-page .btn-primary { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
   .collections-empty-mark { color: CanvasText; }
 }
+
+/* Recomendaciones: identidad completa y resultados explicables protagonistas. */
+.recommendations-page { font-family: "Space Grotesk", system-ui, sans-serif; }
+.recommendations-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, .75fr);
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  border: 1px solid rgba(176, 149, 213, .15);
+  border-radius: 1.2rem;
+  background: radial-gradient(ellipse at 80% 30%, rgba(131, 95, 184, .13), transparent 60%),
+    radial-gradient(ellipse at 50% 90%, rgba(81, 158, 197, .06), transparent 60%),
+    linear-gradient(135deg, rgba(24, 31, 51, .85), rgba(14, 23, 40, .55));
+}
+.recommendations-banner .page-header { margin-bottom: 0 !important; }
+.recommendations-banner .page-header h1 { font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.15; text-wrap: balance; color: #ebe2f7; }
+.recommendations-banner .page-description { max-width: 32rem; color: #becbdc; }
+.recommendations-banner-art {
+  width: min(100%, 19rem);
+  justify-self: center;
+  mask-image: radial-gradient(ellipse at center, #000 40%, transparent 74%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 40%, transparent 74%);
+}
+.recommendations-banner-art img { display: block; width: 100%; height: auto; }
+.recommendations-source {
+  padding: 1.4rem;
+  border: 1px solid rgba(152, 164, 204, .22);
+  border-radius: 1rem;
+  background: radial-gradient(ellipse at 0% 0%, rgba(119, 97, 177, .09), transparent 70%), #142135;
+}
+.recommendations-source .form-label { color: #d5c9e8; font-weight: 600; }
+.recommendations-source .form-select { min-height: 2.75rem; border-radius: .65rem; background-color: #101c2e; }
+.recommendations-source .form-select:focus { border-color: #aacde7; outline: 2px solid #bba5de; outline-offset: 2px; box-shadow: none; }
+.recommendations-page .recommendation-card { border-color: rgba(173, 146, 205, .3); background: linear-gradient(150deg, #1c263d, #131e30); }
+.recommendation-content { display: flex; flex-direction: column; flex: 1; gap: 1rem; padding: 1.25rem; min-width: 0; }
+.recommendation-content h2 { margin: 0; font-size: 1.3rem; line-height: 1.35; color: #f1f5fb; letter-spacing: -.025em; }
+.recommendation-content > p { margin: 0; font-size: .9rem; line-height: 1.7; }
+.recommendation-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
+  padding: .6rem .75rem;
+  border-color: rgba(168, 150, 207, .35);
+  border-radius: .65rem;
+  background: linear-gradient(115deg, rgba(137, 102, 183, .16), rgba(85, 154, 191, .08));
+  color: #d9cdeb;
+  font-size: .75rem;
+  line-height: 1.5;
+}
+.recommendation-score strong { color: #d0e9f5; flex-shrink: 0; }
+.recommendation-details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .55rem .8rem; margin: 0; align-items: baseline; }
+.recommendation-details dt { font-size: .72rem; font-weight: 500; color: #aebfd5; }
+.recommendation-details dd { margin: 0; font-size: .82rem; line-height: 1.6; }
+.recommendation-reasons { padding: 1rem; border-top: 1px solid rgba(170, 146, 205, .28); border-radius: .6rem; background: rgba(108, 93, 155, .07); }
+.recommendation-reasons h3 { color: #dbceec; font-weight: 600; line-height: 1.5; }
+.recommendation-reasons li + li { margin-top: .5rem; }
+.recommendation-content .recommendation-add { margin-top: auto; min-height: 2.75rem; font-size: .85rem; border-color: transparent; background: linear-gradient(115deg, #bba7df, #dbb0d6, #abd6e9); color: #111b2c; }
+.recommendation-content .recommendation-add:hover { background: linear-gradient(115deg, #cbb8e9, #e7c1df, #c1e4f1); color: #111b2c; }
+.recommendations-page .recommendations-empty { text-align: center; border-radius: 1rem; border-color: rgba(160, 153, 204, .24); background: radial-gradient(ellipse at 50% 0%, rgba(131, 101, 178, .09), transparent 70%), #131f31; }
+.recommendations-empty p { max-width: 36rem; margin-inline: auto; }
+.recommendations-page > .placeholder-panel { border-radius: .8rem; border-color: rgba(160, 153, 204, .24); }
+.recommendations-page .btn:focus-visible { outline: 2px solid #d7e8f6; outline-offset: 4px; }
+@media (hover: hover) {
+  .recommendations-page .recommendation-card:hover { border-color: #ae9bc8; }
+}
+@media (max-width: 767.98px) {
+  .recommendations-banner { grid-template-columns: minmax(0, 1fr); padding: 1.5rem; }
+  .recommendations-banner-art { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .recommendations-page .btn { transition: none; }
+  .recommendations-page .btn:not(:disabled):hover { transform: none; }
+}
+@media (forced-colors: active) {
+  .recommendations-banner, .recommendations-source, .recommendations-page .recommendation-card, .recommendations-page .recommendations-empty, .recommendation-score, .recommendation-reasons { background: Canvas; border-color: CanvasText; }
+  .recommendation-content .recommendation-add { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
+}
