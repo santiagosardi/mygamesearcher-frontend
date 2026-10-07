@@ -1,10 +1,8 @@
 import api from './api'
 import type { ActualizarColeccion, Coleccion, CrearColeccion } from '../types/coleccion'
 
-export async function obtenerColecciones(usuarioId: number): Promise<Coleccion[]> {
-  const response = await api.get<Coleccion[]>('/colecciones', {
-    params: { usuarioId },
-  })
+export async function obtenerColecciones(): Promise<Coleccion[]> {
+  const response = await api.get<Coleccion[]>('/colecciones')
   return response.data
 }
 

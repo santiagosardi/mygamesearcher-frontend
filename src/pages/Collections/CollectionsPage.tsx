@@ -8,8 +8,6 @@ import type { Juego } from '../../types/juego'
 import { obtenerJuegos } from '../../services/juegos.service'
 import CollectionCard from './CollectionCard'
 
-// Usuario temporal hasta contar con autenticación.
-const USUARIO_PRUEBA_ID = 2
 
 function CollectionsPage() {
   const [colecciones, setColecciones] = useState<Coleccion[]>([])
@@ -52,7 +50,7 @@ function CollectionsPage() {
 
     async function cargarColecciones() {
       try {
-        const datos = await obtenerColecciones(USUARIO_PRUEBA_ID)
+        const datos = await obtenerColecciones()
         if (activo) setColecciones(datos)
       } catch {
         if (activo) setError('No pudimos cargar tus colecciones. Verificá que el backend esté disponible y volvé a abrir esta página para intentar nuevamente.')
@@ -84,7 +82,6 @@ function CollectionsPage() {
     setErrorCreacion(null)
     try {
       const nueva = await crearColeccion({
-        usuarioId: USUARIO_PRUEBA_ID,
         nombre: nombreLimpio,
         ...(descripcion.trim() ? { descripcion: descripcion.trim() } : {}),
       })

@@ -8,8 +8,6 @@ import type { RespuestaRecomendaciones } from '../../types/recomendacion'
 import { obtenerColecciones } from '../../services/colecciones.service'
 import type { Coleccion } from '../../types/coleccion'
 
-// Usuario temporal hasta contar con autenticación.
-const USUARIO_PRUEBA_ID = 2
 
 function RecommendationsPage() {
   const [respuesta, setRespuesta] = useState<RespuestaRecomendaciones | null>(null)
@@ -36,7 +34,7 @@ function RecommendationsPage() {
     setActualizando(true)
     setErrorActualizacion(null)
     try {
-      const datos = await obtenerRecomendaciones(USUARIO_PRUEBA_ID, fuenteConsultada ? Number(fuenteConsultada) : undefined)
+      const datos = await obtenerRecomendaciones(fuenteConsultada ? Number(fuenteConsultada) : undefined)
       // Solo la consulta más reciente puede reemplazar el ranking.
       if (montado.current && version === versionConsulta.current) {
         setRespuesta(datos)
@@ -77,7 +75,7 @@ function RecommendationsPage() {
     try {
       let yaExistia = false
       try {
-        await agregarJuegoABiblioteca({ usuarioId: USUARIO_PRUEBA_ID, juegoId })
+        await agregarJuegoABiblioteca(juegoId)
       } catch (error) {
         if (isAxiosError(error) && error.response?.status === 409) yaExistia = true
         else throw error
@@ -108,7 +106,7 @@ function RecommendationsPage() {
 
     async function cargarColecciones() {
       try {
-        const datos = await obtenerColecciones(USUARIO_PRUEBA_ID)
+        const datos = await obtenerColecciones()
         if (activo) setColecciones(datos)
       } catch {
         if (activo) setErrorColecciones('No pudimos cargar tus colecciones. Podés seguir usando Toda mi biblioteca.')

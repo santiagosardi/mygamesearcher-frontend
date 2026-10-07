@@ -1,15 +1,13 @@
 import api from './api'
-import type { ActualizarBiblioteca, AgregarJuegoBiblioteca, Biblioteca } from '../types/biblioteca'
+import type { ActualizarBiblioteca, Biblioteca } from '../types/biblioteca'
 
-export async function obtenerBiblioteca(usuarioId: number): Promise<Biblioteca[]> {
-  const response = await api.get<Biblioteca[]>('/bibliotecas', {
-    params: { usuarioId },
-  })
+export async function obtenerBiblioteca(): Promise<Biblioteca[]> {
+  const response = await api.get<Biblioteca[]>('/bibliotecas')
   return response.data
 }
 
-export async function agregarJuegoABiblioteca(datos: AgregarJuegoBiblioteca): Promise<Biblioteca> {
-  const response = await api.post<Biblioteca>('/bibliotecas', datos)
+export async function agregarJuegoABiblioteca(juegoId: number): Promise<Biblioteca> {
+  const response = await api.post<Biblioteca>('/bibliotecas', { juegoId })
   return response.data
 }
 

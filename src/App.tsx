@@ -6,6 +6,8 @@ import LibraryPage from './pages/Library/LibraryPage'
 import CollectionsPage from './pages/Collections/CollectionsPage'
 import RecommendationsPage from './pages/Recommendations/RecommendationsPage'
 import NotFoundPage from './pages/NotFoundPage'
+import LoginPage from './pages/Login/LoginPage'
+import ProtectedRoute from './auth/ProtectedRoute'
 
 function App() {
   return (
@@ -13,9 +15,12 @@ function App() {
       <Route element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path="catalogo" element={<CatalogPage />} />
-        <Route path="biblioteca" element={<LibraryPage />} />
-        <Route path="colecciones" element={<CollectionsPage />} />
-        <Route path="recomendaciones" element={<RecommendationsPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="biblioteca" element={<LibraryPage />} />
+          <Route path="colecciones" element={<CollectionsPage />} />
+          <Route path="recomendaciones" element={<RecommendationsPage />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

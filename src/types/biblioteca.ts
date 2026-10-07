@@ -8,7 +8,6 @@ export interface ActualizarBiblioteca {
 }
 
 export interface AgregarJuegoBiblioteca {
-  usuarioId: number
   juegoId: number
   estado?: EstadoBiblioteca
   favorito?: boolean
