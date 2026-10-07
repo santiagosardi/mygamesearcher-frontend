@@ -1155,3 +1155,65 @@ body {
   .recommendations-banner, .recommendations-source, .recommendations-page .recommendation-card, .recommendations-page .recommendations-empty, .recommendation-score, .recommendation-reasons { background: Canvas; border-color: CanvasText; }
   .recommendation-content .recommendation-add { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
 }
+
+/* Panel administrativo: jerarquía sobria y accesos de gestión claros. */
+.admin-overview { font-family: "Space Grotesk", system-ui, sans-serif; }
+.admin-overview-header {
+  padding: 1.75rem;
+  border: 1px solid rgba(151, 170, 197, .18);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #17243a, #111c2e);
+}
+.admin-overview-header .page-header { margin-bottom: 0 !important; }
+.admin-overview-header .eyebrow { color: #aabed5; }
+.admin-overview-header .page-header h1 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  line-height: 1.2;
+  color: #eef3fa;
+}
+.admin-overview-header .page-description { color: #bac8d9; }
+.admin-overview .admin-access-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .85rem;
+  min-width: 0;
+  border: 1px solid rgba(147, 168, 198, .22);
+  border-radius: .9rem;
+  background: linear-gradient(150deg, #162238, #121e30);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .13);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.admin-access-card h2 { margin: 0; font-size: 1.3rem; line-height: 1.35; color: #e5edf8; }
+.admin-access-card p { margin: 0; color: #b5c4d7; }
+.admin-overview .admin-access-button {
+  margin-top: auto;
+  min-height: 2.75rem;
+  padding: .6rem .9rem;
+  border-radius: .6rem;
+  border-color: #657d9a;
+  background: rgba(107, 143, 181, .08);
+  color: #d9e7f5;
+  font-size: .9rem;
+}
+.admin-overview .admin-access-button:hover {
+  border-color: #a2b8d1;
+  background: #24344d;
+  color: #f2f6fc;
+}
+.admin-overview .admin-access-button:focus-visible { outline: 2px solid #cbe2f4; outline-offset: 4px; }
+@media (hover: hover) {
+  .admin-overview .admin-access-card:hover { border-color: #738ba7; box-shadow: 0 8px 22px rgba(0, 0, 0, .18); }
+}
+@media (max-width: 767.98px) {
+  .admin-overview-header { padding: 1.25rem; }
+  .admin-overview .admin-access-button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-overview .admin-access-card, .admin-overview .admin-access-button { transition: none; }
+  .admin-overview .admin-access-button:hover { transform: none; }
+}
+@media (forced-colors: active) {
+  .admin-overview-header, .admin-overview .admin-access-card { background: Canvas; border-color: CanvasText; }
+  .admin-overview .admin-access-button { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
+}
