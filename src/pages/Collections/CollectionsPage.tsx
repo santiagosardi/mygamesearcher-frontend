@@ -9,6 +9,7 @@ import { obtenerJuegos } from '../../services/juegos.service'
 import CollectionCard from './CollectionCard'
 import { obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { Biblioteca } from '../../types/biblioteca'
+import collectionsArtwork from '../../assets/home-cards/collections-hollow.png'
 
 
 function CollectionsPage() {
@@ -125,9 +126,14 @@ function CollectionsPage() {
   }
 
   return (
-    <>
-      <PageHeader title="Colecciones" description="Organizá los juegos de tu biblioteca en grupos que tengan sentido para vos." />
-      <section className="placeholder-panel p-4 mb-4" aria-labelledby="crear-coleccion-title">
+    <div className="collections-page">
+      <div className="collections-banner mb-4">
+        <PageHeader title="Armá tu propia colección." description="Organizá los juegos de tu biblioteca en grupos que tengan sentido para vos." />
+        <div className="collections-banner-art" aria-hidden="true">
+          <img src={collectionsArtwork} alt="" width={1254} height={1254} />
+        </div>
+      </div>
+      <section className="collections-create placeholder-panel p-4 mb-4" aria-labelledby="crear-coleccion-title">
         <h2 className="h4 mb-3" id="crear-coleccion-title">Crear colección</h2>
         <form onSubmit={(event) => void enviarColeccion(event)}>
           <fieldset disabled={creando || cargando || Boolean(error)}>
@@ -157,12 +163,13 @@ function CollectionsPage() {
       ) : error ? (
         <p className="placeholder-panel p-4" role="alert">{error}</p>
       ) : colecciones.length === 0 ? (
-        <section className="placeholder-panel p-4">
+        <section className="collections-empty placeholder-panel p-4 p-md-5">
+          <span className="collections-empty-mark" aria-hidden="true">◇</span>
           <h2 className="h4">Todavía no tenés colecciones</h2>
           <p className="secondary-text mb-0">Creá tu primera colección con el formulario de arriba.</p>
         </section>
       ) : (
-        <div className="row g-3">
+        <div className="collections-grid row g-4">
           {colecciones.map((coleccion) => (
             <div className="col-12 col-md-6 col-xl-4" key={coleccion.id}>
               <CollectionCard coleccion={coleccion} juegos={juegos} cargandoJuegos={cargandoJuegos}
@@ -172,7 +179,7 @@ function CollectionsPage() {
           ))}
         </div>
       )}
-    </>
+    </div>
   )
 }
 export default CollectionsPage

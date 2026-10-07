@@ -38,16 +38,16 @@ function Navbar() {
               </li>
             )}
           </ul>
-          <div className="d-flex flex-wrap align-items-center gap-2 mt-3 mt-lg-0 ms-lg-3">
+          <div className="navbar-session d-flex flex-wrap align-items-center gap-2 mt-3 mt-lg-0 ms-lg-3">
             {isLoading ? <span className="secondary-text small" role="status">Verificando sesión…</span>
               : user ? <>
-                <span className="secondary-text small text-break">Hola, {user.nombre}</span>
-                <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => {
+                <span className="navbar-greeting secondary-text small text-break">Hola, {user.nombre}</span>
+                <button className="navbar-logout btn btn-outline-secondary btn-sm" type="button" onClick={() => {
                   logout()
                   setIsOpen(false)
                   navigate('/login', { replace: true })
                 }}>Cerrar sesión</button>
-              </> : <Link className="btn btn-outline-secondary btn-sm" to="/login" onClick={() => setIsOpen(false)}>Iniciar sesión</Link>}
+              </> : <Link className="navbar-login btn btn-outline-secondary btn-sm" to="/login" onClick={() => setIsOpen(false)}>Iniciar sesión</Link>}
           </div>
         </div>
       </div>

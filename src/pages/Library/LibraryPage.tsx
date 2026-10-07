@@ -3,6 +3,8 @@ import { isAxiosError } from 'axios'
 import PageHeader from '../../components/PageHeader'
 import { actualizarBiblioteca, eliminarBiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { ActualizarBiblioteca, Biblioteca, EstadoBiblioteca } from '../../types/biblioteca'
+import { Link } from 'react-router-dom'
+import libraryArtwork from '../../assets/home-cards/library-panther.png'
 
 
 const prioridadEstado: Record<EstadoBiblioteca, number> = {
@@ -107,34 +109,49 @@ function LibraryPage() {
   }, [])
 
   return (
-    <>
-      <PageHeader title="Mi biblioteca" description="Tu espacio personal para reunir videojuegos y organizar lo que querés jugar." />
+    <div className="library-page">
+      <div className="library-banner mb-4">
+        <PageHeader title="Tu biblioteca. Tus juegos." description="Tu espacio personal para reunir videojuegos y organizar lo que querés jugar." />
+        <div className="library-banner-art" aria-hidden="true">
+          <img src={libraryArtwork} alt="" width={1254} height={1254} />
+        </div>
+      </div>
       {confirmacionEliminacion && <p className="placeholder-panel p-3" role="status">{confirmacionEliminacion}</p>}
       {cargando ? (
         <p className="placeholder-panel p-4 secondary-text" role="status">Cargando biblioteca…</p>
       ) : error ? (
         <p className="placeholder-panel p-4" role="alert">{error}</p>
       ) : biblioteca.length === 0 ? (
-        <section className="placeholder-panel p-4">
+        <section className="library-empty p-4 p-md-5">
+          <span className="library-empty-mark" aria-hidden="true">♡</span>
           <h2 className="h4">Tu biblioteca está vacía</h2>
-          <p className="secondary-text mb-0">Los juegos guardados aparecerán acá cuando estén disponibles.</p>
+          <p className="secondary-text">Los juegos que agregues aparecerán acá para que puedas organizarlos y elegir qué jugar.</p>
+          <Link className="btn btn-primary" to="/catalogo">Explorar catálogo</Link>
         </section>
       ) : (
-        <div className="row g-3">
+        <div className="row g-4">
           {bibliotecaOrdenada.map((entrada) => (
             <div className="col-12 col-md-6 col-xl-4" key={entrada.id}>
-              <article className="placeholder-panel h-100 p-4 text-break">
+              <article className="library-game-card catalog-game-card h-100 text-break">
+                <div className="catalog-cover" aria-hidden="true">
+                  {entrada.juego.urlImagen?.trim() ? (
+                    <img src={entrada.juego.urlImagen} alt="" loading="lazy" decoding="async" />
+                  ) : (
+                    <div className="catalog-cover-fallback"><span>{entrada.juego.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span></div>
+                  )}
+                </div>
+                <div className="library-game-content">
                 <h2 className="h4">{entrada.juego.titulo}</h2>
-                <p className="secondary-text">{entrada.juego.descripcion?.trim() || 'Sin descripción disponible.'}</p>
-                <dl className="mb-0">
+                <p className="library-game-description secondary-text">{entrada.juego.descripcion?.trim() || 'Sin descripción disponible.'}</p>
+                <dl className="library-game-details mb-0">
                   <dt>Estado</dt>
-                  <dd className="secondary-text">{etiquetasEstado[entrada.estado]}</dd>
+                  <dd className={`library-state library-state-${entrada.estado.toLowerCase()}`}>{etiquetasEstado[entrada.estado]}</dd>
                   <dt>Favorito</dt>
-                  <dd className="secondary-text">{entrada.favorito ? 'Sí' : 'No'}</dd>
+                  <dd className={entrada.favorito ? 'library-favorite is-favorite' : 'library-favorite'}>{entrada.favorito ? 'Sí' : 'No'}</dd>
                   <dt>Fecha de agregado</dt>
                   <dd className="secondary-text mb-0">{formatearFecha(entrada.fechaAgregado)}</dd>
                 </dl>
-                <fieldset className="mt-4" disabled={procesando.includes(entrada.id)}>
+                <fieldset className="library-actions" disabled={procesando.includes(entrada.id)}>
                   <legend className="visually-hidden">Administrar {entrada.juego.titulo}</legend>
                   <label className="form-label" htmlFor={`estado-${entrada.id}`}>Cambiar estado</label>
                   <select
@@ -152,11 +169,11 @@ function LibraryPage() {
                     ))}
                   </select>
                   <div className="d-flex flex-column gap-2 mt-3">
-                    <button className="btn btn-outline-secondary" type="button"
+                    <button className="library-favorite-button btn btn-outline-secondary" type="button"
                       onClick={() => void administrarEntrada(entrada, { favorito: !entrada.favorito })}>
                       {entrada.favorito ? 'Quitar favorito' : 'Marcar favorito'}
                     </button>
-                    <button className="btn btn-outline-secondary" type="button"
+                    <button className="library-delete-button btn btn-outline-secondary" type="button"
                       onClick={() => void administrarEntrada(entrada)}>
                       Eliminar de biblioteca
                     </button>
@@ -168,12 +185,13 @@ function LibraryPage() {
                     {mensajes[entrada.id].texto}
                   </p>
                 )}
+                </div>
               </article>
             </div>
           ))}
         </div>
       )}
-    </>
+    </div>
   )
 }
 export default LibraryPage
