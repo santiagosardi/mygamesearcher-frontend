@@ -6,7 +6,8 @@ import api from '../services/api'
 vi.mock('../services/auth.service', () => ({ login: vi.fn(), getMe: vi.fn(), register: vi.fn() }))
 
 // Ningún test puede escapar hacia el backend real.
-api.defaults.adapter = async () => { throw new Error('Petición HTTP no mockeada en un test') }
+const bloquearHttp = async () => { throw new Error('Petición HTTP no mockeada en un test') }
+api.defaults.adapter = bloquearHttp
 
-beforeEach(() => { localStorage.clear(); sessionStorage.clear() })
-afterEach(() => { cleanup(); localStorage.clear(); sessionStorage.clear() })
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); api.defaults.adapter = bloquearHttp })
+afterEach(() => { cleanup(); localStorage.clear(); sessionStorage.clear(); api.defaults.adapter = bloquearHttp })
