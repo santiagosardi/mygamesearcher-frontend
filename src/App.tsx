@@ -7,6 +7,7 @@ import CollectionsPage from './pages/Collections/CollectionsPage'
 import RecommendationsPage from './pages/Recommendations/RecommendationsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/Login/LoginPage'
+import RegisterPage from './pages/Register/RegisterPage'
 import ProtectedRoute from './auth/ProtectedRoute'
 import AdminPage from './pages/Admin/AdminPage'
 import AdminGamesPage from './pages/Admin/AdminGamesPage'
@@ -19,6 +20,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="catalogo" element={<CatalogPage />} />
         <Route path="login" element={<LoginPage />} />
+        <Route path="registro" element={<RegisterPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="biblioteca" element={<LibraryPage />} />
           <Route path="colecciones" element={<CollectionsPage />} />

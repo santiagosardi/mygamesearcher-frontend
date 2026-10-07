@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { isAxiosError } from 'axios'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import { useAuth } from '../../auth/useAuth'
 
 function LoginPage() {
   const { login, isAuthenticated, isLoading, sessionError } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -42,6 +43,7 @@ function LoginPage() {
     <div className="row justify-content-center">
       <div className="col-12 col-md-8 col-lg-6">
         <PageHeader title="Iniciar sesión" description="Ingresá para acceder a tus espacios personales." />
+        {location.state?.registroExitoso === true && <p className="placeholder-panel p-3" role="status">Tu cuenta se creó correctamente. Ya podés iniciar sesión.</p>}
         {sessionError && <p role="alert">{sessionError}</p>}
         <form className="placeholder-panel p-4" onSubmit={(event) => void enviar(event)}>
           <fieldset disabled={enviando}>
@@ -56,6 +58,7 @@ function LoginPage() {
           </fieldset>
           {error && <p className="mt-3 mb-0" role="alert">{error}</p>}
         </form>
+        <p className="mt-3"><Link to="/registro">¿No tenés cuenta? Registrate</Link></p>
       </div>
     </div>
   )
