@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import mainLogo from '../assets/branding/logo-main.png'
+import mainLogo from '../assets/branding/logo-main.webp'
 
 const navigation = [
   { to: '/', label: 'Inicio' },

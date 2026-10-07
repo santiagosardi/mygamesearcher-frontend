@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
-import heroImage from '../../assets/hero-characters.png'
-import catalogImage from '../../assets/home-cards/catalog-rabbid.png'
-import libraryImage from '../../assets/home-cards/library-panther.png'
-import collectionsImage from '../../assets/home-cards/collections-hollow.png'
-import recommendationsImage from '../../assets/home-cards/recommendations-group.png'
+import heroImage from '../../assets/hero-characters.webp'
+import catalogImage from '../../assets/home-cards/catalog-rabbid.webp'
+import libraryImage from '../../assets/home-cards/library-panther.webp'
+import collectionsImage from '../../assets/home-cards/collections-hollow.webp'
+import recommendationsImage from '../../assets/home-cards/recommendations-group.webp'
 
 const sections = [
   {

@@ -6,7 +6,7 @@ import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibli
 import type { Juego } from '../../types/juego'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
-import catalogArtwork from '../../assets/home-cards/catalog-rabbid.png'
+import catalogArtwork from '../../assets/home-cards/catalog-rabbid.webp'
 
 
 function CatalogPage() {

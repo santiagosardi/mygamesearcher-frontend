@@ -9,7 +9,7 @@ import { obtenerJuegos } from '../../services/juegos.service'
 import CollectionCard from './CollectionCard'
 import { obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { Biblioteca } from '../../types/biblioteca'
-import collectionsArtwork from '../../assets/home-cards/collections-hollow.png'
+import collectionsArtwork from '../../assets/home-cards/collections-hollow.webp'
 
 
 function CollectionsPage() {

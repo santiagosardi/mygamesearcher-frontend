@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import PageHeader from '../../components/PageHeader'
 import { register } from '../../services/auth.service'
-import registerArtwork from '../../assets/auth/register-characters.png'
+import registerArtwork from '../../assets/auth/register-characters.webp'
 
 function RegisterPage() {
   const { isAuthenticated, isLoading } = useAuth()

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { isAxiosError } from 'axios'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
-import loginArtwork from '../../assets/auth/login-characters.png'
+import loginArtwork from '../../assets/auth/login-characters.webp'
 
 function LoginPage() {
   const { login, isAuthenticated, isLoading, sessionError } = useAuth()

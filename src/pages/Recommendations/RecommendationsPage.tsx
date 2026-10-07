@@ -7,7 +7,7 @@ import { agregarJuegoABiblioteca } from '../../services/bibliotecas.service'
 import type { RespuestaRecomendaciones } from '../../types/recomendacion'
 import { obtenerColecciones } from '../../services/colecciones.service'
 import type { Coleccion } from '../../types/coleccion'
-import recommendationsArtwork from '../../assets/home-cards/recommendations-group.png'
+import recommendationsArtwork from '../../assets/home-cards/recommendations-group.webp'
 
 
 function RecommendationsPage() {

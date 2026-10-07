@@ -4,7 +4,7 @@ import PageHeader from '../../components/PageHeader'
 import { actualizarBiblioteca, eliminarBiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { ActualizarBiblioteca, Biblioteca, EstadoBiblioteca } from '../../types/biblioteca'
 import { Link } from 'react-router-dom'
-import libraryArtwork from '../../assets/home-cards/library-panther.png'
+import libraryArtwork from '../../assets/home-cards/library-panther.webp'
 
 
 const prioridadEstado: Record<EstadoBiblioteca, number> = {
