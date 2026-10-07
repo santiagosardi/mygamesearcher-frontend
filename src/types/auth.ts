@@ -17,3 +17,10 @@ export interface LoginResponse {
   user: AuthUser
   accessToken: string
 }
+
+export interface RegisterCredentials {
+  nombre: string
+  apellido?: string
+  email: string
+  password: string
+}
