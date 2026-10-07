@@ -27,3 +27,16 @@ export interface Juego {
   plataformas: Plataforma[]
   caracteristicas: Caracteristica[]
 }
+
+export interface CrearJuego {
+  titulo: string
+  descripcion?: string
+  fechaLanzamiento?: string
+  desarrollador?: string
+  urlImagen?: string
+  generoIds?: number[]
+  plataformaIds?: number[]
+  caracteristicaIds?: number[]
+}
+
+export type ActualizarJuego = Partial<CrearJuego>

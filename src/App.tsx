@@ -8,6 +8,9 @@ import RecommendationsPage from './pages/Recommendations/RecommendationsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LoginPage from './pages/Login/LoginPage'
 import ProtectedRoute from './auth/ProtectedRoute'
+import AdminPage from './pages/Admin/AdminPage'
+import AdminGamesPage from './pages/Admin/AdminGamesPage'
+import AdminAttributesPage from './pages/Admin/AdminAttributesPage'
 
 function App() {
   return (
@@ -20,6 +23,13 @@ function App() {
           <Route path="biblioteca" element={<LibraryPage />} />
           <Route path="colecciones" element={<CollectionsPage />} />
           <Route path="recomendaciones" element={<RecommendationsPage />} />
+        </Route>
+        <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+          <Route path="admin" element={<AdminPage />} />
+          <Route path="admin/juegos" element={<AdminGamesPage />} />
+          <Route path="admin/generos" element={<AdminAttributesPage key="generos" tipo="generos" />} />
+          <Route path="admin/plataformas" element={<AdminAttributesPage key="plataformas" tipo="plataformas" />} />
+          <Route path="admin/caracteristicas" element={<AdminAttributesPage key="caracteristicas" tipo="caracteristicas" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
