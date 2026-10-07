@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth'
 import PageHeader from '../../components/PageHeader'
 import { register } from '../../services/auth.service'
+import registerArtwork from '../../assets/auth/register-characters.png'
 
 function RegisterPage() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -66,28 +67,40 @@ function RegisterPage() {
   if (isLoading) return <p role="status">Verificando sesión…</p>
   if (isAuthenticated) return <Navigate to="/catalogo" replace />
   return (
-    <div className="row justify-content-center">
-      <div className="col-12 col-md-8 col-lg-6">
+    <div className="register-page">
+      <div className="register-content">
         <PageHeader title="Crear cuenta" description="Registrate para organizar tu biblioteca y tus colecciones." />
-        <form className="placeholder-panel p-4" onSubmit={(event) => void enviar(event)}>
+        <form className="register-form placeholder-panel p-4" onSubmit={(event) => void enviar(event)}>
           <fieldset disabled={enviando}>
             <legend className="visually-hidden">Datos de registro</legend>
-            <label className="form-label" htmlFor="registro-nombre">Nombre</label>
-            <input className="form-control catalog-search mb-3" id="registro-nombre" autoComplete="given-name" required maxLength={100}
-              value={nombre} onChange={(event) => setNombre(event.target.value)} />
-            <label className="form-label" htmlFor="registro-apellido">Apellido (opcional)</label>
-            <input className="form-control catalog-search mb-3" id="registro-apellido" autoComplete="family-name" maxLength={100}
-              value={apellido} onChange={(event) => setApellido(event.target.value)} />
+            <div className="register-field-row">
+              <div>
+                <label className="form-label" htmlFor="registro-nombre">Nombre</label>
+                <input className="form-control catalog-search mb-3" id="registro-nombre" autoComplete="given-name" required maxLength={100}
+                  value={nombre} onChange={(event) => setNombre(event.target.value)} />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="registro-apellido">Apellido (opcional)</label>
+                <input className="form-control catalog-search mb-3" id="registro-apellido" autoComplete="family-name" maxLength={100}
+                  value={apellido} onChange={(event) => setApellido(event.target.value)} />
+              </div>
+            </div>
             <label className="form-label" htmlFor="registro-email">Email</label>
             <input className="form-control catalog-search mb-3" id="registro-email" type="email" autoComplete="email" required maxLength={254}
               value={email} onChange={(event) => setEmail(event.target.value)} />
-            <label className="form-label" htmlFor="registro-password">Contraseña</label>
-            <input className="form-control catalog-search" id="registro-password" type={visible ? 'text' : 'password'} autoComplete="new-password" required
-              aria-describedby="registro-password-ayuda" value={password} onChange={(event) => setPassword(event.target.value)} />
-            <p className="secondary-text small mt-1" id="registro-password-ayuda">Al menos 8 caracteres.</p>
-            <label className="form-label" htmlFor="registro-confirmacion">Confirmar contraseña</label>
-            <input className="form-control catalog-search mb-3" id="registro-confirmacion" type={visible ? 'text' : 'password'} autoComplete="new-password" required
-              value={confirmacion} onChange={(event) => setConfirmacion(event.target.value)} />
+            <div className="register-field-row">
+              <div>
+                <label className="form-label" htmlFor="registro-password">Contraseña</label>
+                <input className="form-control catalog-search" id="registro-password" type={visible ? 'text' : 'password'} autoComplete="new-password" required
+                  aria-describedby="registro-password-ayuda" value={password} onChange={(event) => setPassword(event.target.value)} />
+                <p className="secondary-text small mt-1" id="registro-password-ayuda">Al menos 8 caracteres.</p>
+              </div>
+              <div>
+                <label className="form-label" htmlFor="registro-confirmacion">Confirmar contraseña</label>
+                <input className="form-control catalog-search mb-3" id="registro-confirmacion" type={visible ? 'text' : 'password'} autoComplete="new-password" required
+                  value={confirmacion} onChange={(event) => setConfirmacion(event.target.value)} />
+              </div>
+            </div>
             <button className="btn btn-outline-secondary btn-sm mb-3" type="button" aria-pressed={visible} onClick={() => setVisible(!visible)}>
               {visible ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}
             </button>
@@ -96,7 +109,10 @@ function RegisterPage() {
           {enviando && <p className="mt-3 mb-0" role="status">Registrando tu cuenta…</p>}
           {error && <p className="mt-3 mb-0" role="alert">{error}</p>}
         </form>
-        <p className="mt-3"><Link to="/login">¿Ya tenés cuenta? Iniciá sesión</Link></p>
+        <p className="register-login-link mt-3"><Link to="/login">¿Ya tenés cuenta? Iniciá sesión</Link></p>
+      </div>
+      <div className="register-artwork" aria-hidden="true">
+        <img src={registerArtwork} alt="" decoding="async" />
       </div>
     </div>
   )
