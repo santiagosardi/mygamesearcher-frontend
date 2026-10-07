@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import mainLogo from '../assets/branding/logo-main.png'
 
 const navigation = [
   { to: '/', label: 'Inicio' },
@@ -18,7 +19,7 @@ function Navbar() {
     <nav className="navbar navbar-expand-lg app-navbar" aria-label="Navegación principal" data-bs-theme="dark">
       <div className="container">
         <Link className="navbar-brand" to="/" onClick={() => setIsOpen(false)}>
-          <span className="brand-mark" aria-hidden="true">M</span>MyGameSearcher
+          <img className="navbar-brand-logo" src={mainLogo} alt="" width={40} height={40} />MyGameSearcher
         </Link>
         <button className="navbar-toggler" type="button" aria-controls="main-navigation"
           aria-expanded={isOpen} aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}

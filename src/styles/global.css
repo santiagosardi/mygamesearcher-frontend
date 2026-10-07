@@ -382,6 +382,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--app-text); outl
   letter-spacing: -.025em;
   color: #f3f6fb;
 }
+.app-navbar .navbar-brand-logo {
+  display: block;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
 .app-navbar .brand-mark {
   flex-shrink: 0;
   width: 2.25rem;
