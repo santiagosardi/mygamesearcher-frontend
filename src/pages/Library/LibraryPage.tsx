@@ -4,8 +4,6 @@ import PageHeader from '../../components/PageHeader'
 import { actualizarBiblioteca, eliminarBiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { ActualizarBiblioteca, Biblioteca, EstadoBiblioteca } from '../../types/biblioteca'
 
-// Usuario de prueba hasta contar con autenticación.
-const USUARIO_PRUEBA_ID = 2
 
 const prioridadEstado: Record<EstadoBiblioteca, number> = {
   PENDIENTE: 0,
@@ -89,7 +87,7 @@ function LibraryPage() {
 
     async function cargarBiblioteca() {
       try {
-        const datos = await obtenerBiblioteca(USUARIO_PRUEBA_ID)
+        const datos = await obtenerBiblioteca()
         if (activo) setBiblioteca(datos)
       } catch {
         if (activo) {

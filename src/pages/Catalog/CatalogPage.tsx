@@ -4,11 +4,12 @@ import PageHeader from '../../components/PageHeader'
 import { obtenerJuegos } from '../../services/juegos.service'
 import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { Juego } from '../../types/juego'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/useAuth'
 
-// Usuario de prueba hasta contar con autenticación.
-const USUARIO_PRUEBA_ID = 2
 
 function CatalogPage() {
+  const { isAuthenticated, isLoading, user } = useAuth()
   const [juegos, setJuegos] = useState<Juego[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -22,9 +23,11 @@ function CatalogPage() {
   const [mensajes, setMensajes] = useState<Record<number, { texto: string; error: boolean }>>({})
   const solicitudesEnCurso = useRef(new Set<number>())
   const montado = useRef(false)
+  const versionSesion = useRef(0)
 
   async function agregarJuego(juegoId: number) {
-    if (cargandoBiblioteca || errorBiblioteca || juegosGuardados.includes(juegoId) || solicitudesEnCurso.current.has(juegoId)) return
+    if (!isAuthenticated || isLoading || cargandoBiblioteca || errorBiblioteca || juegosGuardados.includes(juegoId) || solicitudesEnCurso.current.has(juegoId)) return
+    const sesion = versionSesion.current
 
     // Bloquea inmediatamente otro envío, incluso antes del siguiente render.
     solicitudesEnCurso.current.add(juegoId)
@@ -36,12 +39,12 @@ function CatalogPage() {
     })
 
     try {
-      await agregarJuegoABiblioteca({ usuarioId: USUARIO_PRUEBA_ID, juegoId })
-      if (!montado.current) return
+      await agregarJuegoABiblioteca(juegoId)
+      if (!montado.current || sesion !== versionSesion.current) return
       setJuegosGuardados((actuales) => [...new Set([...actuales, juegoId])])
       setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto: 'Juego agregado a tu biblioteca.', error: false } }))
     } catch (error) {
-      if (!montado.current) return
+      if (!montado.current || sesion !== versionSesion.current) return
       if (isAxiosError(error) && error.response?.status === 409) {
         setJuegosGuardados((actuales) => [...new Set([...actuales, juegoId])])
         setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto: 'Este juego ya estaba en tu biblioteca.', error: false } }))
@@ -86,16 +89,6 @@ function CatalogPage() {
     let activo = true
     montado.current = true
 
-    async function cargarBiblioteca() {
-      try {
-        const entradas = await obtenerBiblioteca(USUARIO_PRUEBA_ID)
-        if (activo) setJuegosGuardados(entradas.map((entrada) => entrada.juego.id))
-      } catch {
-        if (activo) setErrorBiblioteca('No pudimos consultar tu biblioteca. Volvé a abrir el catálogo para intentar nuevamente antes de agregar juegos.')
-      } finally {
-        if (activo) setCargandoBiblioteca(false)
-      }
-    }
 
     async function cargarJuegos() {
       try {
@@ -111,7 +104,6 @@ function CatalogPage() {
     }
 
     void cargarJuegos()
-    void cargarBiblioteca()
 
     // Ignora el resultado de esta consulta si se abandona la pantalla.
     return () => {
@@ -119,6 +111,28 @@ function CatalogPage() {
       montado.current = false
     }
   }, [])
+
+  useEffect(() => {
+    let activo = true
+    versionSesion.current += 1
+    setJuegosGuardados([])
+    setMensajes({})
+    setErrorBiblioteca(null)
+    setCargandoBiblioteca(false)
+    if (!isLoading && isAuthenticated) {
+      setCargandoBiblioteca(true)
+      void obtenerBiblioteca().then((entradas) => {
+        if (activo) setJuegosGuardados(entradas.map((entrada) => entrada.juego.id))
+      }).catch((error) => {
+        if (activo) setErrorBiblioteca(isAxiosError(error) && error.response?.status === 401
+          ? 'Tu sesión venció. Cerrá sesión e ingresá nuevamente para consultar tu biblioteca.'
+          : 'No pudimos consultar tu biblioteca. Volvé a abrir el catálogo para intentar nuevamente.')
+      }).finally(() => {
+        if (activo) setCargandoBiblioteca(false)
+      })
+    }
+    return () => { activo = false; versionSesion.current += 1 }
+  }, [isLoading, isAuthenticated, user])
 
   return (
     <>
@@ -201,16 +215,18 @@ function CatalogPage() {
                   <dt>Plataformas</dt>
                   <dd className="secondary-text mb-0">{juego.plataformas.map((plataforma) => plataforma.nombre).join(', ') || 'No informadas'}</dd>
                 </dl>
-                <button
+                {!isLoading && !isAuthenticated ? (
+                  <Link className="btn btn-primary w-100 mt-4" to="/login">Iniciar sesión para agregar</Link>
+                ) : <button
                   className="btn btn-primary w-100 mt-4"
                   type="button"
-                  disabled={cargandoBiblioteca || Boolean(errorBiblioteca) || juegosGuardados.includes(juego.id) || agregando.includes(juego.id)}
+                  disabled={isLoading || cargandoBiblioteca || Boolean(errorBiblioteca) || juegosGuardados.includes(juego.id) || agregando.includes(juego.id)}
                   onClick={() => void agregarJuego(juego.id)}
                 >
                   {juegosGuardados.includes(juego.id)
                     ? 'Ya está en tu biblioteca'
                     : agregando.includes(juego.id) ? 'Agregando...' : 'Agregar a mi biblioteca'}
-                </button>
+                </button>}
                 {mensajes[juego.id] && (
                   <p className="secondary-text mt-3 mb-0" role={mensajes[juego.id].error ? 'alert' : 'status'}>
                     {mensajes[juego.id].texto}

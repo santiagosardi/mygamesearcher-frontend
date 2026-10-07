@@ -12,9 +12,9 @@ export interface Coleccion {
 }
 
 export interface CrearColeccion {
-  usuarioId: number
   nombre: string
   descripcion?: string
+  juegoIds?: number[]
 }
 
 export interface ActualizarColeccion {

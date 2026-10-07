@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/useAuth'
 
 const navigation = [
   { to: '/', label: 'Inicio' },
@@ -11,6 +12,8 @@ const navigation = [
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const { user, isLoading, logout } = useAuth()
+  const navigate = useNavigate()
   return (
     <nav className="navbar navbar-expand-lg app-navbar" aria-label="Navegación principal" data-bs-theme="dark">
       <div className="container">
@@ -30,6 +33,17 @@ function Navbar() {
               </li>
             ))}
           </ul>
+          <div className="d-flex flex-wrap align-items-center gap-2 mt-3 mt-lg-0 ms-lg-3">
+            {isLoading ? <span className="secondary-text small" role="status">Verificando sesión…</span>
+              : user ? <>
+                <span className="secondary-text small text-break">Hola, {user.nombre}</span>
+                <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => {
+                  logout()
+                  setIsOpen(false)
+                  navigate('/login', { replace: true })
+                }}>Cerrar sesión</button>
+              </> : <Link className="btn btn-outline-secondary btn-sm" to="/login" onClick={() => setIsOpen(false)}>Iniciar sesión</Link>}
+          </div>
         </div>
       </div>
     </nav>
