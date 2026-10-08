@@ -6,6 +6,11 @@ export async function obtenerJuegos(): Promise<Juego[]> {
   return response.data
 }
 
+export async function obtenerJuegoPorId(id: number): Promise<Juego> {
+  const response = await api.get<Juego>(`/juegos/${id}`)
+  return response.data
+}
+
 export async function crearJuego(datos: CrearJuego): Promise<Juego> {
   return (await api.post<Juego>('/juegos', datos)).data
 }

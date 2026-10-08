@@ -128,4 +128,37 @@ describe('Catálogo con servicios reales y HTTP simulado', () => {
     await act(async () => pendiente.resolve(juegos))
     expect(screen.queryByRole('heading', { name: juegos[0].titulo })).not.toBeInTheDocument()
   })
+  it('consulta el juego individual y muestra el detalle con sus relaciones', async () => {
+    const detalle = {
+      ...juegos[0],
+      descripcion: 'Descripción completa del juego para el detalle.',
+      fechaLanzamiento: '2026-02-03',
+      generos: [{ id: 1, nombre: 'Género A', descripcion: 'Acción' }],
+      plataformas: [{ id: 1, nombre: 'Plataforma A', descripcion: 'PC' }],
+      caracteristicas: [{ id: 5, nombre: 'Multijugador', descripcion: 'Jugar con amigos' }],
+    }
+    const http = mockHttp((config) => config.url === '/juegos' ? juegos : detalle)
+    renderResource('/catalogo', false)
+    await screen.findByRole('heading', { name: juegos[0].titulo })
+
+    await userEvent.setup().click(screen.getAllByRole('button', { name: 'Ver detalle' })[0])
+
+    expect(http.mock.calls.map(([config]) => config.url)).toEqual(['/juegos', '/juegos/20'])
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Descripción completa del juego para el detalle.')
+    expect(screen.getByText('Multijugador')).toBeVisible()
+    expect(screen.getByText('2026-02-03')).toBeVisible()
+  })
+  it('muestra un error entendible si falla la consulta individual', async () => {
+    const http = mockHttp((config) => {
+      if (config.url === '/juegos') return juegos
+      throw errorHttp(404)
+    })
+    renderResource('/catalogo', false)
+    await screen.findByRole('heading', { name: juegos[0].titulo })
+
+    await userEvent.setup().click(screen.getAllByRole('button', { name: 'Ver detalle' })[0])
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar el detalle del juego')
+    expect(http.mock.calls.map(([config]) => config.url)).toEqual(['/juegos', '/juegos/20'])
+  })
 })

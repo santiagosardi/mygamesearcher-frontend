@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import PageHeader from '../../components/PageHeader'
-import { obtenerJuegos } from '../../services/juegos.service'
+import { obtenerJuegoPorId, obtenerJuegos } from '../../services/juegos.service'
 import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import type { Juego } from '../../types/juego'
 import { Link } from 'react-router-dom'
@@ -22,9 +22,35 @@ function CatalogPage() {
   const [errorBiblioteca, setErrorBiblioteca] = useState<string | null>(null)
   const [agregando, setAgregando] = useState<number[]>([])
   const [mensajes, setMensajes] = useState<Record<number, { texto: string; error: boolean }>>({})
+  const [juegoDetalle, setJuegoDetalle] = useState<Juego | null>(null)
+  const [cargandoDetalle, setCargandoDetalle] = useState(false)
+  const [errorDetalle, setErrorDetalle] = useState<string | null>(null)
   const solicitudesEnCurso = useRef(new Set<number>())
+  const solicitudDetalle = useRef(0)
   const montado = useRef(false)
   const versionSesion = useRef(0)
+
+  async function verDetalle(juegoId: number) {
+    const solicitudActual = ++solicitudDetalle.current
+    setJuegoDetalle(null)
+    setErrorDetalle(null)
+    setCargandoDetalle(true)
+    try {
+      const detalle = await obtenerJuegoPorId(juegoId)
+      if (solicitudActual === solicitudDetalle.current) setJuegoDetalle(detalle)
+    } catch {
+      if (solicitudActual === solicitudDetalle.current) setErrorDetalle('No pudimos cargar el detalle del juego. Intentá nuevamente.')
+    } finally {
+      if (solicitudActual === solicitudDetalle.current) setCargandoDetalle(false)
+    }
+  }
+
+  function cerrarDetalle() {
+    solicitudDetalle.current += 1
+    setJuegoDetalle(null)
+    setErrorDetalle(null)
+    setCargandoDetalle(false)
+  }
 
   async function agregarJuego(juegoId: number) {
     if (!isAuthenticated || isLoading || cargandoBiblioteca || errorBiblioteca || juegosGuardados.includes(juegoId) || solicitudesEnCurso.current.has(juegoId)) return
@@ -241,6 +267,9 @@ function CatalogPage() {
                   )) : <dd className="secondary-text mb-0">No informadas</dd>}
                 </dl>
                 <div className="catalog-game-actions">
+                <button className="btn btn-outline-secondary w-100" type="button" onClick={() => void verDetalle(juego.id)}>
+                  Ver detalle
+                </button>
                 {!isLoading && !isAuthenticated ? (
                   <Link className="btn btn-primary w-100 mt-4" to="/login">Iniciar sesión para agregar</Link>
                 ) : <button
@@ -263,6 +292,51 @@ function CatalogPage() {
               </article>
             </div>
           ))}
+        </div>
+      )}
+      {(cargandoDetalle || errorDetalle || juegoDetalle) && (
+        <div className="catalog-detail-backdrop" role="presentation">
+          <div className="catalog-detail-modal" role="dialog" aria-modal="true" aria-labelledby="detalle-juego-titulo">
+            <div className="catalog-detail-header">
+              <h2 id="detalle-juego-titulo" className="h3 mb-0">Detalle del juego</h2>
+              <button className="btn-close btn-close-white" type="button" aria-label="Cerrar detalle" onClick={cerrarDetalle} />
+            </div>
+            <div className="catalog-detail-body">
+              {cargandoDetalle ? (
+                <p className="secondary-text mb-0" role="status">Cargando detalle...</p>
+              ) : errorDetalle ? (
+                <p className="mb-0" role="alert">{errorDetalle}</p>
+              ) : juegoDetalle ? (
+                <div className="row g-4">
+                  <div className="col-12 col-md-5">
+                    {juegoDetalle.urlImagen?.trim() ? (
+                      <img className="catalog-detail-image" src={juegoDetalle.urlImagen} alt={`Portada de ${juegoDetalle.titulo}`} />
+                    ) : (
+                      <div className="catalog-detail-image catalog-cover-fallback" role="img" aria-label={`Sin imagen para ${juegoDetalle.titulo}`}>
+                        <span>{juegoDetalle.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-12 col-md-7">
+                    <h3 className="h4">{juegoDetalle.titulo}</h3>
+                    <p className="secondary-text">{juegoDetalle.descripcion?.trim() || 'No disponible'}</p>
+                    <dl className="catalog-detail-data mb-0">
+                      <dt>Desarrollador</dt>
+                      <dd>{juegoDetalle.desarrollador?.trim() || 'No disponible'}</dd>
+                      <dt>Fecha de lanzamiento</dt>
+                      <dd>{juegoDetalle.fechaLanzamiento?.trim() || 'No disponible'}</dd>
+                      <dt>Géneros</dt>
+                      <dd>{juegoDetalle.generos.length > 0 ? juegoDetalle.generos.map((genero) => genero.nombre).join(', ') : 'No disponible'}</dd>
+                      <dt>Plataformas</dt>
+                      <dd>{juegoDetalle.plataformas.length > 0 ? juegoDetalle.plataformas.map((plataforma) => plataforma.nombre).join(', ') : 'No disponible'}</dd>
+                      <dt>Características</dt>
+                      <dd>{juegoDetalle.caracteristicas.length > 0 ? juegoDetalle.caracteristicas.map((caracteristica) => caracteristica.nombre).join(', ') : 'No disponible'}</dd>
+                    </dl>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       )}
     </div>
