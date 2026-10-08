@@ -21,15 +21,15 @@ Este repositorio contiene el frontend. El backend es una aplicación separada.
 
 ```text
 React / Vercel
-      ↓ HTTP / API REST
+      ↓ HTTPS + REST API + JWT
 NestJS / Render
-      ↓ MikroORM
+      ↓ MikroORM + SSL
 MySQL / Aiven
 ```
 
 Frontend y backend se comunican mediante una API REST. El frontend presenta los datos y realiza peticiones con Axios; el backend gestiona la autenticación, las reglas de negocio y el acceso a la base de datos.
 
-El backend utiliza NestJS, TypeScript, MikroORM 7, JWT y bcrypt. La base de producción es MySQL 8 en Aiven, con conexión SSL, migraciones aplicadas y un seed de catálogo de 50 juegos.
+El backend utiliza NestJS, TypeScript, MikroORM 7, JWT y bcryptjs. La base de producción es MySQL 8 en Aiven, con conexión SSL y migraciones aplicadas. El catálogo final contiene 147 juegos, 13 géneros, 6 plataformas y 15 características.
 
 ## Tecnologías
 
