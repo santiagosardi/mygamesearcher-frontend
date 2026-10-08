@@ -1,0 +1,271 @@
+import { useEffect, useRef, useState } from 'react'
+import { isAxiosError } from 'axios'
+import PageHeader from '../../components/PageHeader'
+import { obtenerJuegos } from '../../services/juegos.service'
+import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
+import type { Juego } from '../../types/juego'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/useAuth'
+import catalogArtwork from '../../assets/home-cards/catalog-rabbid.webp'
+
+
+function CatalogPage() {
+  const { isAuthenticated, isLoading, user } = useAuth()
+  const [juegos, setJuegos] = useState<Juego[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [busqueda, setBusqueda] = useState('')
+  const [generoSeleccionado, setGeneroSeleccionado] = useState('')
+  const [plataformaSeleccionada, setPlataformaSeleccionada] = useState('')
+  const [juegosGuardados, setJuegosGuardados] = useState<number[]>([])
+  const [cargandoBiblioteca, setCargandoBiblioteca] = useState(true)
+  const [errorBiblioteca, setErrorBiblioteca] = useState<string | null>(null)
+  const [agregando, setAgregando] = useState<number[]>([])
+  const [mensajes, setMensajes] = useState<Record<number, { texto: string; error: boolean }>>({})
+  const solicitudesEnCurso = useRef(new Set<number>())
+  const montado = useRef(false)
+  const versionSesion = useRef(0)
+
+  async function agregarJuego(juegoId: number) {
+    if (!isAuthenticated || isLoading || cargandoBiblioteca || errorBiblioteca || juegosGuardados.includes(juegoId) || solicitudesEnCurso.current.has(juegoId)) return
+    const sesion = versionSesion.current
+
+    // Bloquea inmediatamente otro envío, incluso antes del siguiente render.
+    solicitudesEnCurso.current.add(juegoId)
+    setAgregando((actuales) => [...actuales, juegoId])
+    setMensajes((actuales) => {
+      const siguientes = { ...actuales }
+      delete siguientes[juegoId]
+      return siguientes
+    })
+
+    try {
+      await agregarJuegoABiblioteca(juegoId)
+      if (!montado.current || sesion !== versionSesion.current) return
+      setJuegosGuardados((actuales) => [...new Set([...actuales, juegoId])])
+      setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto: 'Juego agregado a tu biblioteca.', error: false } }))
+    } catch (error) {
+      if (!montado.current || sesion !== versionSesion.current) return
+      if (isAxiosError(error) && error.response?.status === 409) {
+        setJuegosGuardados((actuales) => [...new Set([...actuales, juegoId])])
+        setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto: 'Este juego ya estaba en tu biblioteca.', error: false } }))
+      } else {
+        const texto = isAxiosError(error) && !error.response
+          ? 'No pudimos conectar con el backend. Verificá la conexión e intentá nuevamente.'
+          : 'No pudimos agregar el juego. Intentá nuevamente.'
+        setMensajes((actuales) => ({ ...actuales, [juegoId]: { texto, error: true } }))
+      }
+    } finally {
+      solicitudesEnCurso.current.delete(juegoId)
+      if (montado.current) setAgregando((actuales) => actuales.filter((id) => id !== juegoId))
+    }
+  }
+
+  const generosDisponibles = Array.from(
+    new Map(juegos.flatMap((juego) => juego.generos).map((genero) => [genero.id, genero])).values(),
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+
+  const plataformasDisponibles = Array.from(
+    new Map(juegos.flatMap((juego) => juego.plataformas).map((plataforma) => [plataforma.id, plataforma])).values(),
+  ).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+
+  const textoBuscado = busqueda.trim().toLowerCase()
+  const juegosFiltrados = juegos.filter((juego) =>
+    juego.titulo.toLowerCase().includes(textoBuscado) &&
+    (generoSeleccionado === '' || juego.generos.some((genero) => genero.id === Number(generoSeleccionado))) &&
+    (plataformaSeleccionada === '' || juego.plataformas.some((plataforma) => plataforma.id === Number(plataformaSeleccionada))),
+  )
+  const juegosOrdenados = [...juegosFiltrados].sort((a, b) => {
+    const diferenciaBiblioteca = Number(juegosGuardados.includes(a.id)) - Number(juegosGuardados.includes(b.id))
+    return diferenciaBiblioteca || a.titulo.localeCompare(b.titulo, 'es', { sensitivity: 'base' })
+  })
+
+  function limpiarFiltros() {
+    setBusqueda('')
+    setGeneroSeleccionado('')
+    setPlataformaSeleccionada('')
+  }
+
+  useEffect(() => {
+    let activo = true
+    montado.current = true
+
+
+    async function cargarJuegos() {
+      try {
+        const datos = await obtenerJuegos()
+        if (activo) setJuegos(datos)
+      } catch {
+        if (activo) {
+          setError('No pudimos cargar el catálogo. Verificá que el backend esté disponible e intentá volver a esta página más tarde.')
+        }
+      } finally {
+        if (activo) setCargando(false)
+      }
+    }
+
+    void cargarJuegos()
+
+    // Ignora el resultado de esta consulta si se abandona la pantalla.
+    return () => {
+      activo = false
+      montado.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let activo = true
+    versionSesion.current += 1
+    setJuegosGuardados([])
+    setMensajes({})
+    setErrorBiblioteca(null)
+    setCargandoBiblioteca(false)
+    if (!isLoading && isAuthenticated) {
+      setCargandoBiblioteca(true)
+      void obtenerBiblioteca().then((entradas) => {
+        if (activo) setJuegosGuardados(entradas.map((entrada) => entrada.juego.id))
+      }).catch((error) => {
+        if (activo) setErrorBiblioteca(isAxiosError(error) && error.response?.status === 401
+          ? 'Tu sesión venció. Cerrá sesión e ingresá nuevamente para consultar tu biblioteca.'
+          : 'No pudimos consultar tu biblioteca. Volvé a abrir el catálogo para intentar nuevamente.')
+      }).finally(() => {
+        if (activo) setCargandoBiblioteca(false)
+      })
+    }
+    return () => { activo = false; versionSesion.current += 1 }
+  }, [isLoading, isAuthenticated, user])
+
+  return (
+    <div className="catalog-page">
+      <div className="catalog-banner mb-4">
+        <PageHeader title="Catálogo" description="Explorá videojuegos para descubrir cuáles querés sumar a tu biblioteca." />
+        <div className="catalog-banner-art" aria-hidden="true">
+          <img src={catalogArtwork} alt="" width={1254} height={1254} />
+        </div>
+      </div>
+      <div className="catalog-filters mb-4">
+      <p className="catalog-filter-prompt">¿Qué jugamos hoy?</p>
+      <div className="row g-3 align-items-end">
+        <div className="col-12 col-lg-4">
+          <label className="form-label" htmlFor="busqueda-catalogo">Buscar por título</label>
+          <input
+            className="form-control catalog-search"
+            id="busqueda-catalogo"
+            type="search"
+            placeholder="Escribí el título de un juego"
+            value={busqueda}
+            onChange={(event) => setBusqueda(event.target.value)}
+          />
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label" htmlFor="genero-catalogo">Género</label>
+          <select
+            className="form-select catalog-search"
+            id="genero-catalogo"
+            data-bs-theme="dark"
+            value={generoSeleccionado}
+            onChange={(event) => setGeneroSeleccionado(event.target.value)}
+          >
+            <option value="">Todos</option>
+            {generosDisponibles.map((genero) => (
+              <option value={genero.id} key={genero.id}>{genero.nombre}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-md-6 col-lg-3">
+          <label className="form-label" htmlFor="plataforma-catalogo">Plataforma</label>
+          <select
+            className="form-select catalog-search"
+            id="plataforma-catalogo"
+            data-bs-theme="dark"
+            value={plataformaSeleccionada}
+            onChange={(event) => setPlataformaSeleccionada(event.target.value)}
+          >
+            <option value="">Todos</option>
+            {plataformasDisponibles.map((plataforma) => (
+              <option value={plataforma.id} key={plataforma.id}>{plataforma.nombre}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-lg-2">
+          <button className="btn btn-outline-secondary w-100" type="button" onClick={limpiarFiltros}>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+      </div>
+      {cargandoBiblioteca && <p className="secondary-text" role="status">Consultando tu biblioteca…</p>}
+      {errorBiblioteca && <p className="placeholder-panel p-3" role="alert">{errorBiblioteca}</p>}
+      {cargando ? (
+        <p className="placeholder-panel p-4 secondary-text" role="status">Cargando juegos…</p>
+      ) : error ? (
+        <p className="placeholder-panel p-4" role="alert">{error}</p>
+      ) : juegos.length === 0 ? (
+        <section className="placeholder-panel p-4">
+          <h2 className="h4">Todavía no hay juegos en el catálogo</h2>
+          <p className="secondary-text mb-0">Los juegos aparecerán acá cuando estén disponibles.</p>
+        </section>
+      ) : juegosFiltrados.length === 0 ? (
+        <p className="placeholder-panel p-4 secondary-text" role="status">
+          No se encontraron juegos con los filtros seleccionados
+        </p>
+      ) : (
+        <div className="row g-4">
+          {juegosOrdenados.map((juego) => (
+            <div className="col-12 col-md-6 col-xl-4 col-xxl-3" key={juego.id}>
+              <article className="catalog-game-card h-100 text-break">
+                <div className="catalog-cover" aria-hidden="true">
+                  {juego.urlImagen?.trim() ? (
+                    <img src={juego.urlImagen} alt="" loading="lazy" decoding="async" />
+                  ) : (
+                    <div className="catalog-cover-fallback">
+                      <span>{juego.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="catalog-game-content">
+                <dl className="catalog-genres mb-0">
+                  <dt className="visually-hidden">Géneros</dt>
+                  {juego.generos.length > 0 ? juego.generos.map((genero) => (
+                    <dd className="catalog-chip mb-0" key={genero.id}>{genero.nombre}</dd>
+                  )) : <dd className="mb-0">No informados</dd>}
+                </dl>
+                <h2 className="h4">{juego.titulo}</h2>
+                <p className="catalog-game-description secondary-text">{juego.descripcion?.trim() || 'Sin descripción disponible.'}</p>
+                <dl className="catalog-game-details mb-0">
+                  <dt>Desarrollador</dt>
+                  <dd className="secondary-text">{juego.desarrollador?.trim() || 'No informado'}</dd>
+                  <dt>Plataformas</dt>
+                  {juego.plataformas.length > 0 ? juego.plataformas.map((plataforma) => (
+                    <dd className="catalog-chip catalog-chip-platform mb-0" key={plataforma.id}>{plataforma.nombre}</dd>
+                  )) : <dd className="secondary-text mb-0">No informadas</dd>}
+                </dl>
+                <div className="catalog-game-actions">
+                {!isLoading && !isAuthenticated ? (
+                  <Link className="btn btn-primary w-100 mt-4" to="/login">Iniciar sesión para agregar</Link>
+                ) : <button
+                  className="btn btn-primary w-100 mt-4"
+                  type="button"
+                  disabled={isLoading || cargandoBiblioteca || Boolean(errorBiblioteca) || juegosGuardados.includes(juego.id) || agregando.includes(juego.id)}
+                  onClick={() => void agregarJuego(juego.id)}
+                >
+                  {juegosGuardados.includes(juego.id)
+                    ? 'Ya está en tu biblioteca'
+                    : agregando.includes(juego.id) ? 'Agregando...' : 'Agregar a mi biblioteca'}
+                </button>}
+                {mensajes[juego.id] && (
+                  <p className="secondary-text mt-3 mb-0" role={mensajes[juego.id].error ? 'alert' : 'status'}>
+                    {mensajes[juego.id].texto}
+                  </p>
+                )}
+                </div>
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+export default CatalogPage
