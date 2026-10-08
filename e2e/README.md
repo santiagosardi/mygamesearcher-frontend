@@ -1,6 +1,7 @@
-﻿# E2E con preflight
+# Pruebas E2E con Playwright
 
-El bloqueo incondicional anterior fue reemplazado por comprobaciones abortivas:
+Las pruebas usan un entorno y una base de datos separados de producción.
+Antes de ejecutar los flujos, se aplican comprobaciones que abortan si falta algún requisito:
 archivo local obligatorio, VITE_API_URL exacto http://127.0.0.1:3001,
 E2E_FRONTEND_URL exacto http://127.0.0.1:5174 y E2E_RUN_ALLOWED=YES.
 Después se realiza únicamente GET /juegos, sin redirects, con timeout de 5 segundos,
@@ -23,15 +24,17 @@ No imprimir archivos/credenciales. No guardar JWT ni secretos DB en frontend.
 Vite usa configuración separada con envDir:false y lectura exclusiva del archivo
 E2E. Solo se define VITE_API_URL en el navegador; ADMIN nunca se expone.
 Playwright inicia Vite en 127.0.0.1:5174 con strictPort, sin reutilizar servidores.
-No inicia backend ni hace reset. start:e2e existe y podría usarse como webServer,
-pero se mantiene manual para la primera corrida. Un worker, cero retries, Chromium,
+No inicia backend ni hace reset; ambos pasos se realizan manualmente.
+Se utiliza un worker, cero retries y Chromium,
 sin capturas/video/trazas; reportes ignorados por Git.
 
-Primera ejecución autorizada MANUALMENTE (PowerShell, desde frontend):
+Para los siguientes comandos, ubicar los repositorios mygamesearcher-frontend
+y mygamesearcher-backend en carpetas hermanas. Ejecutar desde la raíz del frontend,
+solo después de verificar la configuración de la base E2E y autorizar su reset:
 
 ```powershell
-npm --prefix C:/Users/Ss/mygamesearcher-backend run e2e:db:reset
-npm --prefix C:/Users/Ss/mygamesearcher-backend run start:e2e
+npm --prefix ../mygamesearcher-backend run e2e:db:reset
+npm --prefix ../mygamesearcher-backend run start:e2e
 # En otra terminal, después del arranque, archivo local completo y permiso YES:
 npm run test:e2e
 ```
@@ -48,4 +51,5 @@ recalculan recomendaciones, comparan la UI con la respuesta real del backend.
 
 Validaciones seguras: npm run test, npm run build, npm run lint, npm audit,
 npx tsc -p e2e/tsconfig.json y npx playwright test --list. --list no ejecuta
-setup, servidores, navegador ni peticiones. La suite real NO se ejecutó en esta etapa.
+setup, servidores, navegador ni peticiones. Estas comprobaciones no equivalen
+a ejecutar los flujos E2E contra el entorno aislado.

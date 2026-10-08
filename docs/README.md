@@ -1,9 +1,6 @@
-# MyGameSearcher - Frontend
+# Documentación de MyGameSearcher
 
-[Documentación](./docs/README.md)
+La documentación principal del frontend está en la raíz del repositorio.
 
-## Instalación
-1. Clonar el repo
-2. `npm install`
-3. Crear `.env` en base a `.env.example`
-4. `npm run dev`
+- [README principal: funcionalidades, instalación, testing y deploy](../README.md).
+- [Pruebas E2E: preparación del entorno aislado y ejecución](../e2e/README.md).
