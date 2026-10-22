@@ -1,12 +1,12 @@
-import { act, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { deferred, errorHttp } from './helpers'
 import { entrada, juegos, mockHttp, renderResource } from './resourceHelpers'
 
 describe('Catálogo con servicios reales y HTTP simulado', () => {
   it('consulta juegos y muestra sus datos para visitantes sin consultar biblioteca', async () => {
-    const http = mockHttp((config) => { expect(config.url).toBe('/juegos'); return juegos })
+    const http = mockHttp((config) => { expect(config.url).toBe('/juegos'); expect(config.params).toBeUndefined(); return juegos })
     renderResource('/catalogo', false)
     expect(await screen.findByRole('heading', { name: juegos[0].titulo })).toBeVisible()
     expect(screen.getByText('Descripción de prueba')).toBeVisible()
@@ -34,24 +34,29 @@ describe('Catálogo con servicios reales y HTTP simulado', () => {
     renderResource('/catalogo', false)
     expect(await screen.findByRole('heading', { name: 'Todavía no hay juegos en el catálogo' })).toBeVisible()
   })
-  it('busca ignorando mayúsculas y espacios sin nuevas consultas', async () => {
-    const http = mockHttp(() => juegos)
+  it('consulta buscar conservando mayúsculas y quitando espacios; borrar recupera el catálogo', async () => {
+    const http = mockHttp((config) => config.params?.buscar ? [juegos[1]] : juegos)
     renderResource('/catalogo', false)
     await screen.findByRole('heading', { name: juegos[0].titulo })
-    await userEvent.setup().type(screen.getByLabelText('Buscar por título'), '  ALFA  ')
-    expect(screen.getByRole('heading', { name: juegos[1].titulo })).toBeVisible()
+    await userEvent.setup().type(screen.getByLabelText('Buscar por título'), '  Mine  ')
+    expect(await screen.findByRole('heading', { name: juegos[1].titulo })).toBeVisible()
     expect(screen.queryByRole('heading', { name: juegos[0].titulo })).not.toBeInTheDocument()
-    expect(http).toHaveBeenCalledTimes(1)
+    expect(http).toHaveBeenCalledTimes(2)
+    expect(http.mock.calls[1][0].params).toEqual({ buscar: 'Mine' })
+    // La respuesta se muestra aunque su título no coincida localmente con Mine.
+    await userEvent.setup().clear(screen.getByLabelText('Buscar por título'))
+    expect(await screen.findByRole('heading', { name: juegos[0].titulo })).toBeVisible()
+    expect(http.mock.calls[2][0].params).toBeUndefined()
   })
   it('informa búsqueda sin coincidencias', async () => {
-    mockHttp(() => juegos)
+    mockHttp((config) => config.params?.buscar ? [] : juegos)
     renderResource('/catalogo', false)
     await screen.findByRole('heading', { name: juegos[0].titulo })
     await userEvent.setup().type(screen.getByLabelText('Buscar por título'), 'inexistente')
-    expect(screen.getByRole('status')).toHaveTextContent('No se encontraron juegos')
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('No se encontraron juegos'))
   })
   it('combina género, plataforma y búsqueda; Limpiar filtros restaura todo', async () => {
-    mockHttp(() => juegos)
+    const http = mockHttp((config) => config.params?.buscar ? [juegos[0]] : juegos)
     renderResource('/catalogo', false)
     await screen.findByRole('heading', { name: juegos[0].titulo })
     const user = userEvent.setup()
@@ -59,10 +64,62 @@ describe('Catálogo con servicios reales y HTTP simulado', () => {
     await user.selectOptions(screen.getByLabelText('Plataforma'), '2')
     expect(screen.getByRole('status')).toHaveTextContent('No se encontraron juegos')
     await user.selectOptions(screen.getByLabelText('Plataforma'), '1')
+    expect(http).toHaveBeenCalledTimes(1)
     await user.type(screen.getByLabelText('Buscar por título'), 'ZETA')
+    await screen.findByRole('heading', { name: juegos[0].titulo })
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1)
+    expect(screen.getByRole('option', { name: 'Género B' })).toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText('Género'), '2')
+    expect(screen.getByRole('status')).toHaveTextContent('No se encontraron juegos')
+    expect(http).toHaveBeenCalledTimes(2)
     await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
+    await screen.findByRole('heading', { name: juegos[1].titulo })
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2)
+  })
+  it('espera 350 ms y consulta solamente el último texto escrito', async () => {
+    const http = mockHttp(() => juegos)
+    renderResource('/catalogo', false)
+    await screen.findByRole('heading', { name: juegos[0].titulo })
+    vi.useFakeTimers()
+    try {
+      const input = screen.getByLabelText('Buscar por título')
+      for (const value of ['m', 'mi', 'min', 'mine']) {
+        fireEvent.change(input, { target: { value } })
+        await act(async () => { await vi.advanceTimersByTimeAsync(50) })
+      }
+      expect(http).toHaveBeenCalledTimes(1)
+      await act(async () => { await vi.advanceTimersByTimeAsync(299) })
+      expect(http).toHaveBeenCalledTimes(1)
+      await act(async () => { await vi.advanceTimersByTimeAsync(1) })
+      expect(http).toHaveBeenCalledTimes(2)
+      expect(http.mock.calls[1][0].params).toEqual({ buscar: 'mine' })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+  it('ignora resultados anteriores que llegan después de la búsqueda más reciente', async () => {
+    const anterior = deferred<typeof juegos>()
+    const http = mockHttp((config) => config.params?.buscar === 'vieja'
+      ? anterior.promise : config.params?.buscar ? [juegos[1]] : juegos)
+    renderResource('/catalogo', false)
+    await screen.findByRole('heading', { name: juegos[0].titulo })
+    const input = screen.getByLabelText('Buscar por título')
+    fireEvent.change(input, { target: { value: 'vieja' } })
+    await waitFor(() => expect(http).toHaveBeenCalledTimes(2))
+    fireEvent.change(input, { target: { value: 'nueva' } })
+    expect(await screen.findByRole('heading', { name: juegos[1].titulo })).toBeVisible()
+    await act(async () => anterior.resolve([juegos[0]]))
+    expect(screen.queryByRole('heading', { name: juegos[0].titulo })).not.toBeInTheDocument()
+  })
+  it('muestra error de búsqueda y se recupera al borrar el texto', async () => {
+    mockHttp((config) => { if (config.params?.buscar) throw errorHttp(); return juegos })
+    renderResource('/catalogo', false)
+    await screen.findByRole('heading', { name: juegos[0].titulo })
+    fireEvent.change(screen.getByLabelText('Buscar por título'), { target: { value: 'Mine' } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar el catálogo')
+    fireEvent.change(screen.getByLabelText('Buscar por título'), { target: { value: '' } })
+    expect(await screen.findByRole('heading', { name: juegos[0].titulo })).toBeVisible()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
   it('visitante navega a login sin POST', async () => {
     const http = mockHttp(() => juegos)

@@ -12,6 +12,7 @@ import catalogArtwork from '../../assets/home-cards/catalog-rabbid.webp'
 function CatalogPage() {
   const { isAuthenticated, isLoading, user } = useAuth()
   const [juegos, setJuegos] = useState<Juego[]>([])
+  const [juegosParaFiltros, setJuegosParaFiltros] = useState<Juego[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
@@ -88,16 +89,15 @@ function CatalogPage() {
   }
 
   const generosDisponibles = Array.from(
-    new Map(juegos.flatMap((juego) => juego.generos).map((genero) => [genero.id, genero])).values(),
+    new Map(juegosParaFiltros.flatMap((juego) => juego.generos).map((genero) => [genero.id, genero])).values(),
   ).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
   const plataformasDisponibles = Array.from(
-    new Map(juegos.flatMap((juego) => juego.plataformas).map((plataforma) => [plataforma.id, plataforma])).values(),
+    new Map(juegosParaFiltros.flatMap((juego) => juego.plataformas).map((plataforma) => [plataforma.id, plataforma])).values(),
   ).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
-  const textoBuscado = busqueda.trim().toLowerCase()
+  const textoBuscado = busqueda.trim()
   const juegosFiltrados = juegos.filter((juego) =>
-    juego.titulo.toLowerCase().includes(textoBuscado) &&
     (generoSeleccionado === '' || juego.generos.some((genero) => genero.id === Number(generoSeleccionado))) &&
     (plataformaSeleccionada === '' || juego.plataformas.some((plataforma) => plataforma.id === Number(plataformaSeleccionada))),
   )
@@ -113,14 +113,22 @@ function CatalogPage() {
   }
 
   useEffect(() => {
-    let activo = true
     montado.current = true
+    return () => { montado.current = false }
+  }, [])
 
+  useEffect(() => {
+    let activo = true
+    setCargando(true)
+    setError(null)
 
     async function cargarJuegos() {
       try {
-        const datos = await obtenerJuegos()
-        if (activo) setJuegos(datos)
+        const datos = await obtenerJuegos(textoBuscado)
+        if (activo) {
+          setJuegos(datos)
+          if (!textoBuscado) setJuegosParaFiltros(datos)
+        }
       } catch {
         if (activo) {
           setError('No pudimos cargar el catálogo. Verificá que el backend esté disponible e intentá volver a esta página más tarde.')
@@ -130,14 +138,17 @@ function CatalogPage() {
       }
     }
 
-    void cargarJuegos()
+    const temporizador = textoBuscado
+      ? window.setTimeout(() => void cargarJuegos(), 350)
+      : undefined
+    if (!textoBuscado) void cargarJuegos()
 
     // Ignora el resultado de esta consulta si se abandona la pantalla.
     return () => {
       activo = false
-      montado.current = false
+      window.clearTimeout(temporizador)
     }
-  }, [])
+  }, [textoBuscado])
 
   useEffect(() => {
     let activo = true
@@ -226,7 +237,7 @@ function CatalogPage() {
         <p className="placeholder-panel p-4 secondary-text" role="status">Cargando juegos…</p>
       ) : error ? (
         <p className="placeholder-panel p-4" role="alert">{error}</p>
-      ) : juegos.length === 0 ? (
+      ) : juegos.length === 0 && !textoBuscado ? (
         <section className="placeholder-panel p-4">
           <h2 className="h4">Todavía no hay juegos en el catálogo</h2>
           <p className="secondary-text mb-0">Los juegos aparecerán acá cuando estén disponibles.</p>
