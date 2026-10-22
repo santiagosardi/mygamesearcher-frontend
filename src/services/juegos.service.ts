@@ -1,8 +1,8 @@
 import api from './api'
 import type { ActualizarJuego, CrearJuego, Juego } from '../types/juego'
 
-export async function obtenerJuegos(): Promise<Juego[]> {
-  const response = await api.get<Juego[]>('/juegos')
+export async function obtenerJuegos(buscar?: string): Promise<Juego[]> {
+  const response = await api.get<Juego[]>('/juegos', { params: buscar ? { buscar } : undefined })
   return response.data
 }
 
