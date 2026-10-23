@@ -40,3 +40,18 @@ export interface CrearJuego {
 }
 
 export type ActualizarJuego = Partial<CrearJuego>
+
+export type OfertasJuego = {
+  disponible: false
+  fuente: string
+  mensaje: string
+} | {
+  disponible: true
+  fuente: string
+  titulo: string
+  precioMasBajoUSD: string
+  steamAppId?: string | null
+  imagen?: string | null
+  urlOferta: string
+  urlSteam?: string | null
+}
