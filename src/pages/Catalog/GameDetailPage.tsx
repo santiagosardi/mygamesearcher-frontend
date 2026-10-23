@@ -45,7 +45,7 @@ function GameDetailPage() {
 
   return (
     <div className="game-detail-page">
-      <Link className="btn btn-outline-secondary game-detail-back" to="/catalogo">Volver al catálogo</Link>
+      <Link className="game-detail-back" to="/catalogo"><span aria-hidden="true">←</span> Volver al catálogo</Link>
       {cargando ? <p role="status">Cargando detalle...</p> : error ? <p role="alert">{error}</p> : juego && (
         <>
           <article className="game-detail-panel">
@@ -62,17 +62,20 @@ function GameDetailPage() {
               <div className="col-12 col-md-6 text-break">
                 <h1 className="game-detail-title">{juego.titulo}</h1>
                 <p className="secondary-text game-detail-description">{juego.descripcion?.trim() || 'No disponible'}</p>
+                <dl className="game-detail-meta">
+                  <div><dt>Desarrollador</dt><dd>{juego.desarrollador?.trim() || 'No disponible'}</dd></div>
+                  <div><dt>Fecha de lanzamiento</dt><dd>{juego.fechaLanzamiento?.trim() || 'No disponible'}</dd></div>
+                </dl>
                 <dl className="catalog-detail-data mb-0">
-                  <dt>Desarrollador</dt><dd>{juego.desarrollador?.trim() || 'No disponible'}</dd>
-                  <dt>Fecha de lanzamiento</dt><dd>{juego.fechaLanzamiento?.trim() || 'No disponible'}</dd>
                   <dt>Géneros</dt><dd className="game-detail-chips">{juego.generos.length ? juego.generos.map((genero) => <span className="catalog-chip" key={genero.id}>{genero.nombre}</span>) : 'No disponible'}</dd>
                   <dt>Plataformas</dt><dd className="game-detail-chips">{juego.plataformas.length ? juego.plataformas.map((plataforma) => <span className="catalog-chip catalog-chip-platform" key={plataforma.id}>{plataforma.nombre}</span>) : 'No disponible'}</dd>
-                  <dt>Características</dt><dd className="game-detail-chips">{juego.caracteristicas.length ? juego.caracteristicas.map((caracteristica) => <span className="catalog-chip" key={caracteristica.id}>{caracteristica.nombre}</span>) : 'No disponible'}</dd>
+                  <dt>Características</dt><dd className="game-detail-chips game-detail-features">{juego.caracteristicas.length ? juego.caracteristicas.map((caracteristica) => <span className="catalog-chip" key={caracteristica.id}>{caracteristica.nombre}</span>) : 'No disponible'}</dd>
                 </dl>
               </div>
             </div>
           </article>
           <section className="game-detail-panel game-detail-offers mt-4" aria-labelledby="ofertas-titulo">
+            <p className="game-detail-eyebrow">API EXTERNA</p>
             <h2 id="ofertas-titulo" className="h4">Ofertas / información externa</h2>
             {cargandoOfertas ? <p role="status">Consultando ofertas...</p> : errorOfertas ? <p role="alert">{errorOfertas}</p> : ofertas && (
               <>
