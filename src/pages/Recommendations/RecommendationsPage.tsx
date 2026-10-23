@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
-import { obtenerRecomendaciones } from '../../services/recomendaciones.service'
+import { generarRecomendacionesIa, obtenerRecomendaciones } from '../../services/recomendaciones.service'
 import { agregarJuegoABiblioteca } from '../../services/bibliotecas.service'
-import type { RespuestaRecomendaciones } from '../../types/recomendacion'
+import type { RespuestaRecomendaciones, RespuestaRecomendacionesIa } from '../../types/recomendacion'
 import { obtenerColecciones } from '../../services/colecciones.service'
 import type { Coleccion } from '../../types/coleccion'
 import recommendationsArtwork from '../../assets/home-cards/recommendations-group.webp'
@@ -28,6 +28,31 @@ function RecommendationsPage() {
   const agregados = useRef(new Set<number>())
   const montado = useRef(false)
   const versionConsulta = useRef(0)
+  const [respuestaIa, setRespuestaIa] = useState<RespuestaRecomendacionesIa | null>(null)
+  const [cargandoIa, setCargandoIa] = useState(false)
+  const [errorIa, setErrorIa] = useState<string | null>(null)
+  const versionIa = useRef(0)
+  const iaEnCurso = useRef(false)
+
+  async function generarIa() {
+    if (iaEnCurso.current) return
+    iaEnCurso.current = true
+    const version = ++versionIa.current
+    const fuenteConsultada = fuenteActual.current
+    setCargandoIa(true)
+    setErrorIa(null)
+    try {
+      const datos = await generarRecomendacionesIa(fuenteConsultada ? Number(fuenteConsultada) : undefined)
+      if (montado.current && version === versionIa.current) setRespuestaIa(datos)
+    } catch {
+      if (montado.current && version === versionIa.current) {
+        setErrorIa('No pudimos generar las recomendaciones con IA. Intentá nuevamente.')
+      }
+    } finally {
+      iaEnCurso.current = false
+      if (montado.current) setCargandoIa(false)
+    }
+  }
 
   const actualizarRanking = useCallback(async (despuesDeAgregar = false) => {
     const version = ++versionConsulta.current
@@ -58,6 +83,9 @@ function RecommendationsPage() {
   }, [])
 
   function cambiarFuente(valor: string) {
+    versionIa.current += 1
+    setRespuestaIa(null)
+    setErrorIa(null)
     fuenteActual.current = valor
     setFuente(valor)
     void actualizarRanking()
@@ -122,6 +150,7 @@ function RecommendationsPage() {
       activo = false
       montado.current = false
       versionConsulta.current += 1
+      versionIa.current += 1
     }
   }, [actualizarRanking])
 
@@ -145,11 +174,57 @@ function RecommendationsPage() {
           <p className="secondary-text small mt-2 mb-0" id="descripcion-fuente">
             {fuente ? 'Las recomendaciones se calculan según los juegos de esta colección.' : 'Las recomendaciones se calculan según toda tu biblioteca.'}
           </p>
+          <button className="btn btn-outline-secondary mt-3" type="button" disabled={cargandoIa}
+            onClick={() => void generarIa()}>
+            {cargandoIa ? 'Generando recomendación...' : '✦ Generar recomendación con IA'}
+          </button>
+          {cargandoIa && <p className="secondary-text small mt-2" role="status">Generando recomendación con IA…</p>}
+          {errorIa && <p className="secondary-text small mt-2" role="alert">{errorIa}</p>}
           {cargandoColecciones && <p className="secondary-text small mt-2" role="status">Cargando colecciones…</p>}
           {errorColecciones && <p className="secondary-text small mt-2" role="alert">{errorColecciones}</p>}
         </div>
       </div>
       </div>
+      {respuestaIa && (
+        <section className="mb-4" aria-labelledby="recomendaciones-ia-titulo">
+          <h2 id="recomendaciones-ia-titulo" className="h4 mb-3">✨ Recomendaciones con IA</h2>
+          {respuestaIa.mensaje && <p className="secondary-text">{respuestaIa.mensaje}</p>}
+          {respuestaIa.recomendaciones.length === 0 && !respuestaIa.mensaje && (
+            <p className="secondary-text">No hay recomendaciones con IA disponibles para esta fuente.</p>
+          )}
+          <div className="row g-4">
+            {respuestaIa.recomendaciones.slice(0, 3).map(({ juego, motivo }) => (
+              <div className="col-12 col-md-6 col-xl-4" key={juego.id}>
+                <article className="recommendation-card catalog-game-card h-100 text-break">
+                  <div className="catalog-cover" aria-hidden="true">
+                    {juego.urlImagen?.trim() ? (
+                      <img src={juego.urlImagen} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <div className="catalog-cover-fallback"><span>{juego.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span></div>
+                    )}
+                  </div>
+                  <div className="recommendation-content">
+                    <h3 className="h4">{juego.titulo}</h3>
+                    {juego.descripcion && <p className="secondary-text">{juego.descripcion}</p>}
+                    <div className="recommendation-reasons">
+                      <h4 className="h6">Análisis de IA</h4>
+                      <p className="secondary-text small mb-0">{motivo}</p>
+                    </div>
+                    <Link className="btn btn-outline-secondary" to={`/catalogo/${juego.id}`} target="_blank" rel="noopener noreferrer">Ver detalle</Link>
+                    <button className="recommendation-add btn btn-primary w-100" type="button"
+                      disabled={agregando.includes(juego.id) || guardados.includes(juego.id)}
+                      onClick={() => void agregarJuego(juego.id, juego.titulo)}>
+                      {guardados.includes(juego.id) ? 'Ya está en tu biblioteca'
+                        : agregando.includes(juego.id) ? 'Agregando...' : 'Agregar a mi biblioteca'}
+                    </button>
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      <h2 className="h4 mb-3">Recomendaciones por afinidad</h2>
       {respuesta && fuenteRespuesta !== fuente && (
         <p className="secondary-text small" role="status">El ranking visible corresponde a la fuente anterior hasta que se complete la nueva consulta.</p>
       )}

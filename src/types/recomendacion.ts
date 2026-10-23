@@ -11,3 +11,13 @@ export interface RespuestaRecomendaciones {
   recomendaciones: Recomendacion[]
   mensaje?: string
 }
+
+export interface RecomendacionIa {
+  juego: Juego
+  motivo: string
+}
+
+export interface RespuestaRecomendacionesIa {
+  recomendaciones: RecomendacionIa[]
+  mensaje?: string
+}
