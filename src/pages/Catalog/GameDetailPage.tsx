@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { isAxiosError } from 'axios'
+import { useAuth } from '../../auth/useAuth'
+import { agregarJuegoABiblioteca, obtenerBiblioteca } from '../../services/bibliotecas.service'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerJuegoPorId, obtenerOfertasJuego } from '../../services/juegos.service'
 import type { Juego, OfertasJuego } from '../../types/juego'
@@ -11,6 +14,65 @@ function GameDetailPage() {
   const [cargandoOfertas, setCargandoOfertas] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [errorOfertas, setErrorOfertas] = useState<string | null>(null)
+  const { isAuthenticated, isLoading, user } = useAuth()
+  const [guardado, setGuardado] = useState(false)
+  const [cargandoBiblioteca, setCargandoBiblioteca] = useState(true)
+  const [errorBiblioteca, setErrorBiblioteca] = useState<string | null>(null)
+  const [agregando, setAgregando] = useState(false)
+  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null)
+  const versionBiblioteca = useRef(0)
+  const envioEnCurso = useRef(false)
+
+  useEffect(() => {
+    let activo = true
+    versionBiblioteca.current += 1
+    envioEnCurso.current = false
+    setAgregando(false)
+    setGuardado(false)
+    setMensaje(null)
+    setErrorBiblioteca(null)
+    setCargandoBiblioteca(false)
+    if (!isLoading && isAuthenticated && juego?.id === Number(id)) {
+      setCargandoBiblioteca(true)
+      void obtenerBiblioteca().then((entradas) => {
+        if (activo) setGuardado(entradas.some((entrada) => entrada.juego.id === juego.id))
+      }).catch((error) => {
+        if (activo) setErrorBiblioteca(isAxiosError(error) && error.response?.status === 401
+          ? 'Tu sesión venció. Cerrá sesión e ingresá nuevamente para consultar tu biblioteca.'
+          : 'No pudimos consultar tu biblioteca. Volvé a abrir el detalle para intentar nuevamente.')
+      }).finally(() => { if (activo) setCargandoBiblioteca(false) })
+    }
+    return () => { activo = false; versionBiblioteca.current += 1 }
+  }, [id, juego, isLoading, isAuthenticated, user])
+
+  async function agregarJuego() {
+    if (!juego || !isAuthenticated || isLoading || cargandoBiblioteca || errorBiblioteca || guardado || envioEnCurso.current) return
+    const version = versionBiblioteca.current
+    envioEnCurso.current = true
+    setAgregando(true)
+    setMensaje(null)
+    try {
+      await agregarJuegoABiblioteca(juego.id)
+      if (version !== versionBiblioteca.current) return
+      setGuardado(true)
+      setMensaje({ texto: 'Juego agregado a tu biblioteca.', error: false })
+    } catch (error) {
+      if (version !== versionBiblioteca.current) return
+      if (isAxiosError(error) && error.response?.status === 409) {
+        setGuardado(true)
+        setMensaje({ texto: 'Este juego ya estaba en tu biblioteca.', error: false })
+      } else {
+        setMensaje({ texto: isAxiosError(error) && !error.response
+          ? 'No pudimos conectar con el backend. Verificá la conexión e intentá nuevamente.'
+          : 'No pudimos agregar el juego. Intentá nuevamente.', error: true })
+      }
+    } finally {
+      if (version === versionBiblioteca.current) {
+        envioEnCurso.current = false
+        setAgregando(false)
+      }
+    }
+  }
 
   useEffect(() => {
     let activo = true
@@ -50,7 +112,8 @@ function GameDetailPage() {
         <>
           <article className="game-detail-panel">
             <div className="row g-4">
-              <div className="col-12 col-md-6">
+              <div className="col-12 col-md-6 game-detail-cover-column">
+                <div className="game-detail-cover">
                 {juego.urlImagen?.trim() ? (
                   <img className="catalog-detail-image" src={juego.urlImagen} alt={`Portada de ${juego.titulo}`} />
                 ) : (
@@ -58,6 +121,7 @@ function GameDetailPage() {
                     <span>{juego.titulo.trim().charAt(0).toLocaleUpperCase('es')}</span>
                   </div>
                 )}
+                </div>
               </div>
               <div className="col-12 col-md-6 text-break">
                 <h1 className="game-detail-title">{juego.titulo}</h1>
@@ -71,6 +135,20 @@ function GameDetailPage() {
                   <dt>Plataformas</dt><dd className="game-detail-chips">{juego.plataformas.length ? juego.plataformas.map((plataforma) => <span className="catalog-chip catalog-chip-platform" key={plataforma.id}>{plataforma.nombre}</span>) : 'No disponible'}</dd>
                   <dt>Características</dt><dd className="game-detail-chips game-detail-features">{juego.caracteristicas.length ? juego.caracteristicas.map((caracteristica) => <span className="catalog-chip" key={caracteristica.id}>{caracteristica.nombre}</span>) : 'No disponible'}</dd>
                 </dl>
+                <div className="mt-4">
+                  {!isLoading && !isAuthenticated ? (
+                    <Link className="btn btn-primary w-100" to="/login">Iniciar sesión para agregar</Link>
+                  ) : (
+                    <button className="btn btn-primary w-100" type="button"
+                      disabled={isLoading || cargandoBiblioteca || Boolean(errorBiblioteca) || guardado || agregando}
+                      onClick={() => void agregarJuego()}>
+                      {guardado ? 'Ya está en tu biblioteca' : agregando ? 'Agregando...' : 'Agregar a mi biblioteca'}
+                    </button>
+                  )}
+                  {cargandoBiblioteca && <p className="secondary-text mt-2 mb-0" role="status">Consultando tu biblioteca…</p>}
+                  {errorBiblioteca && <p className="secondary-text mt-2 mb-0" role="alert">{errorBiblioteca}</p>}
+                  {mensaje && <p className="secondary-text mt-2 mb-0" role={mensaje.error ? 'alert' : 'status'}>{mensaje.texto}</p>}
+                </div>
               </div>
             </div>
           </article>
