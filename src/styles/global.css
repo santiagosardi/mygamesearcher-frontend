@@ -703,6 +703,30 @@ body {
 .catalog-page .btn:focus-visible { outline: 2px solid #d6eaf8; outline-offset: 4px; }
 .game-detail-page { max-width: 72rem; margin-inline: auto; }
 .game-detail-panel { padding: 1.5rem; border: 1px solid rgba(158, 146, 192, .35); border-radius: 1rem; background: linear-gradient(150deg, #17233a, #111c2e); }
+.game-detail-back { margin-bottom: 1rem; padding: .5rem .85rem; font-size: .85rem; border-color: rgba(158, 146, 192, .3); }
+.game-detail-page .game-detail-panel { padding: 1.25rem; box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .14); }
+.game-detail-title { margin-bottom: .75rem; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 700; line-height: 1.15; }
+.game-detail-description { line-height: 1.65; margin-bottom: 1rem; }
+.game-detail-page .catalog-detail-image { display: block; aspect-ratio: 460 / 215; max-height: none; border: 1px solid rgba(158, 146, 192, .2); }
+.game-detail-page .catalog-detail-data { display: grid; grid-template-columns: minmax(0, 1fr); gap: .3rem; }
+.game-detail-page .catalog-detail-data dt { margin-top: .6rem; }
+.game-detail-page .catalog-detail-data dt:first-child { margin-top: 0; }
+.game-detail-page .catalog-detail-data dd { min-width: 0; font-size: .9rem; }
+.game-detail-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.game-detail-chips .catalog-chip { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.game-detail-offers { border-color: rgba(133, 173, 200, .3); }
+.game-detail-source { font-size: .8rem; margin-bottom: .75rem; }
+.game-detail-price { font-size: clamp(1.35rem, 2.5vw, 1.9rem); font-weight: 700; color: #c6e8f5; margin-bottom: .4rem; overflow-wrap: anywhere; }
+.game-detail-price-note { font-size: .85rem; line-height: 1.6; max-width: 65ch; }
+.game-detail-offer-actions .btn { width: 100%; min-height: 2.75rem; }
+@media (min-width: 576px) {
+  .game-detail-offer-actions .btn { width: auto; }
+}
+@media (min-width: 992px) {
+  .game-detail-page .game-detail-panel { padding: 1.5rem; }
+  .game-detail-page .catalog-detail-data { grid-template-columns: auto minmax(0, 1fr); gap: .65rem 1rem; align-items: baseline; }
+  .game-detail-page .catalog-detail-data dt { margin-top: 0; }
+}
 .catalog-detail-image { width: 100%; max-height: 18rem; object-fit: cover; border-radius: .7rem; }
 .catalog-detail-data dt { margin-top: .75rem; font-size: .75rem; color: #a1aec2; }
 .catalog-detail-data dt:first-child { margin-top: 0; }
