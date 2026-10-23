@@ -1,5 +1,5 @@
 import api from './api'
-import type { ActualizarJuego, CrearJuego, Juego } from '../types/juego'
+import type { ActualizarJuego, CrearJuego, Juego, OfertasJuego } from '../types/juego'
 
 export async function obtenerJuegos(buscar?: string): Promise<Juego[]> {
   const response = await api.get<Juego[]>('/juegos', { params: buscar ? { buscar } : undefined })
@@ -9,6 +9,10 @@ export async function obtenerJuegos(buscar?: string): Promise<Juego[]> {
 export async function obtenerJuegoPorId(id: number): Promise<Juego> {
   const response = await api.get<Juego>(`/juegos/${id}`)
   return response.data
+}
+
+export async function obtenerOfertasJuego(id: number): Promise<OfertasJuego> {
+  return (await api.get<OfertasJuego>(`/juegos/${id}/ofertas`)).data
 }
 
 export async function crearJuego(datos: CrearJuego): Promise<Juego> {
