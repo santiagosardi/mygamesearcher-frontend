@@ -35,7 +35,7 @@ describe('Login', () => {
     expect(localStorage.length).toBe(1)
     expect(sessionStorage.length).toBe(0)
   })
-  it.each([[401, 'Email o contraseña incorrectos.'], [undefined, 'conectar con el servidor'], [500, 'No pudimos iniciar sesión']])('maneja error %s y conserva credenciales', async (status, texto) => {
+  it.each([[400, 'El formato del email no es válido.'], [401, 'Email o contraseña incorrectos.'], [undefined, 'conectar con el servidor'], [500, 'No pudimos iniciar sesión']])('maneja error %s y conserva credenciales', async (status, texto) => {
     vi.mocked(login).mockRejectedValue(errorHttp(status as number | undefined))
     renderAuthPage('/login')
     const user = await completar()
