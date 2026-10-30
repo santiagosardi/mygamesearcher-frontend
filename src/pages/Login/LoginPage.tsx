@@ -26,11 +26,13 @@ function LoginPage() {
       setPassword('')
       navigate('/catalogo', { replace: true })
     } catch (error) {
-      setError(isAxiosError(error) && error.response?.status === 401
-        ? 'Email o contraseña incorrectos.'
-        : isAxiosError(error) && !error.response
-          ? 'No pudimos conectar con el servidor. Intentá nuevamente.'
-          : 'No pudimos iniciar sesión. Intentá nuevamente.')
+      setError(isAxiosError(error) && error.response?.status === 400
+        ? 'El formato del email no es válido.'
+        : isAxiosError(error) && error.response?.status === 401
+          ? 'Email o contraseña incorrectos.'
+          : isAxiosError(error) && !error.response
+            ? 'No pudimos conectar con el servidor. Intentá nuevamente.'
+            : 'No pudimos iniciar sesión. Intentá nuevamente.')
     } finally {
       enCurso.current = false
       setEnviando(false)
